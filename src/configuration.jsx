@@ -9,17 +9,7 @@ import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDZDxAmQubgfNjc0B5qF0GjfF4ABq-khAQ",
-  authDomain: "fittracker-fee91.firebaseapp.com",
-  databaseURL:
-    "https://fittracker-fee91-default-rtdb.europe-west1.firebasedatabase.app/",
-  projectId: "fittracker-fee91",
-  storageBucket: "fittracker-fee91.firebasestorage.app",
-  messagingSenderId: "834400635835",
-  appId: "1:834400635835:web:1eef270d0c83a81463529e",
-  measurementId: "G-DCJ6HDYSGB",
-};
+const firebaseConfig = {};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
