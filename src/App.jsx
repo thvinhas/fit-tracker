@@ -4,6 +4,9 @@ import Database from "./Database";
 import Login from "./Auth/Login";
 import PrivateRoute from "./PrivateRoute";
 import SingUp from "./Auth/SingUp";
+import WorkoutList from "./Atlete/WorkoutList";
+import WorkoutScreen from "./Atlete/workoutScreen";
+import Dashboard from "./Dashboard";
 
 function App() {
   return (
@@ -17,7 +20,23 @@ function App() {
               path="/"
               element={
                 <PrivateRoute>
-                  <Database />
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/workoutList"
+              element={
+                <PrivateRoute>
+                  <WorkoutList></WorkoutList>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/workout/:id"
+              element={
+                <PrivateRoute>
+                  <WorkoutScreen />
                 </PrivateRoute>
               }
             />
