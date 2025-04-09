@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { auth, database } from "./configuration";
-import { doc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import WorkoutList from "./Atlete/WorkoutList";
 
 function Dashboard() {
@@ -13,7 +13,7 @@ function Dashboard() {
       if (!user) return;
 
       try {
-        const userRef = doc(database, "users".user.uid);
+        const userRef = doc(database, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {

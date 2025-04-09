@@ -1,12 +1,12 @@
 import { BrowserRouter as Router } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
-import Database from "./Database";
 import Login from "./Auth/Login";
 import PrivateRoute from "./PrivateRoute";
 import SingUp from "./Auth/SingUp";
 import WorkoutList from "./Atlete/WorkoutList";
 import WorkoutScreen from "./Atlete/workoutScreen";
 import Dashboard from "./Dashboard";
+import SignIn from "./sign-in/SignIn";
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
       <div>
         <section>
           <Routes>
-            <Route path="/login" element={<Login />}></Route>
+            <Route path="/login" element={<SignIn />}></Route>
             <Route path="/singUp" element={<SingUp />} />
             <Route
               path="/"
