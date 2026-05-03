@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getWorkouts, deleteWorkout } from "../services/firestore";
 import toast from "react-hot-toast";
+import Container from "../components/Container";
+import Button from "../components/Button";
+import Card from "../components/Card";
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
@@ -30,60 +33,75 @@ const Workouts = () => {
     }
   };
 
-  if (authLoading) return <div>Loading...</div>;
+  if (authLoading) {
+    return (
+      <Container>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <Link to="/" className="text-indigo-600 hover:text-indigo-500">
+    <Container title="Área de Treino" subtitle="Gerencie seus treinos">
+      <div className="mb-6">
+        <Link to="/">
+          <Button variant="ghost" size="sm">
             ← Voltar ao Dashboard
-          </Link>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900">
-            Área de Treino
-          </h1>
-          <div className="mt-6">
-            <Link
-              to="/workouts/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Criar Treino
-            </Link>
-          </div>
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900">Seus Treinos</h2>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {workouts.map((workout) => (
-                <div
-                  key={workout.id}
-                  className="bg-white overflow-hidden shadow rounded-lg"
-                >
-                  <div className="p-5">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {workout.name}
-                    </h3>
-                    <div className="mt-4 flex space-x-2">
-                      <Link
-                        to={`/workouts/${workout.id}/edit`}
-                        className="text-indigo-600 hover:text-indigo-500"
-                      >
-                        Editar
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(workout.id)}
-                        className="text-red-600 hover:text-red-500"
-                      >
-                        Excluir
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          </Button>
+        </Link>
       </div>
-    </div>
+
+      <div className="mb-8">
+        <Link to="/workouts/new">
+          <Button size="lg">Criar Novo Treino</Button>
+        </Link>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">
+          Seus Treinos
+        </h3>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : workouts.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-gray-500 mb-4">Nenhum treino criado ainda</p>
+            <Link to="/workouts/new">
+              <Button>Criar seu primeiro treino</Button>
+            </Link>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {workouts.map((workout) => (
+              <Card key={workout.id} className="p-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                  {workout.name}
+                </h4>
+                <div className="flex gap-2">
+                  <Link to={`/workouts/${workout.id}/edit`} className="flex-1">
+                    <Button variant="secondary" size="sm" className="w-full">
+                      Editar
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleDelete(workout.id)}
+                    className="flex-1"
+                  >
+                    Excluir
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </Container>
   );
 };
 

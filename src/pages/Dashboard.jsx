@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getWorkouts, getWorkoutLogs } from "../services/firestore";
+import Container from "../components/Container";
+import Button from "../components/Button";
+import Card from "../components/Card";
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -12,11 +15,16 @@ const Dashboard = () => {
   useEffect(() => {
     if (user) {
       const fetchData = async () => {
-        const workoutsData = await getWorkouts(user.uid);
-        const logsData = await getWorkoutLogs(user.uid);
-        setWorkouts(workoutsData);
-        setWorkoutLogs(logsData);
-        setLoading(false);
+        try {
+          const workoutsData = await getWorkouts(user.uid);
+          const logsData = await getWorkoutLogs(user.uid);
+          setWorkouts(workoutsData);
+          setWorkoutLogs(logsData);
+        } catch (error) {
+          console.error("Erro ao carregar dados:", error);
+        } finally {
+          setLoading(false);
+        }
       };
       fetchData();
     }
@@ -35,63 +43,94 @@ const Dashboard = () => {
 
   const workoutOfTheDay = getWorkoutOfTheDay();
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <Container title="Dashboard" subtitle="Carregando seus treinos...">
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <div className="mt-6">
-            <Link
-              to="/workouts"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Área de Treino
-            </Link>
-          </div>
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900">Treino do Dia</h2>
-            {workoutOfTheDay ? (
-              <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-md">
-                <div className="px-4 py-5 sm:px-6">
-                  <Link
-                    to={`/workout/${workoutOfTheDay.id}`}
-                    className="text-lg font-medium text-indigo-600 hover:text-indigo-500"
-                  >
-                    {workoutOfTheDay.name}
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <p className="mt-4 text-gray-500">Nenhum treino disponível.</p>
-            )}
-          </div>
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Todos os Treinos
-            </h2>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {workouts.map((workout) => (
-                <div
-                  key={workout.id}
-                  className="bg-white overflow-hidden shadow rounded-lg"
-                >
-                  <div className="p-5">
-                    <Link
-                      to={`/workout/${workout.id}`}
-                      className="text-lg font-medium text-indigo-600 hover:text-indigo-500"
-                    >
-                      {workout.name}
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+    <Container title="Dashboard" subtitle="Bem-vindo ao seu espaço de treinos">
+      {/* Action Buttons */}
+      <div className="mb-8 flex gap-4">
+        <Link to="/workouts" className="flex-1 sm:flex-none">
+          <Button size="md">⚙️ Área de Treino</Button>
+        </Link>
       </div>
-    </div>
+
+      {/* Workout of the Day */}
+      {workoutOfTheDay ? (
+        <div className="mb-12">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span className="text-2xl">🎯</span>
+            Treino do Dia
+          </h3>
+          <Card highlighted className="p-6">
+            <div className="space-y-6">
+              <Link
+                key={workoutOfTheDay.id}
+                to={`/workout/${workoutOfTheDay.id}`}
+              >
+                <div>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold">
+                    Destaque
+                  </span>
+                  <h4 className="mt-4 text-2xl font-bold text-indigo-600">
+                    {workoutOfTheDay.name}
+                  </h4>
+                  <p className="text-gray-600 mt-3">
+                    Próximo treino na sequência
+                  </p>
+                </div>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <div className="mb-12 p-6 bg-amber-50 border border-amber-200 rounded-xl">
+          <p className="text-amber-900 font-medium">
+            ℹ️ Crie um treino para começar!
+          </p>
+        </div>
+      )}
+
+      {/* All Workouts */}
+      <div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <span className="text-2xl">💪</span>
+          Todos os Treinos
+        </h3>
+        {workouts.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-gray-500 mb-4">Nenhum treino criado ainda</p>
+            <Link to="/workouts">
+              <Button>Criar seu primeiro treino</Button>
+            </Link>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {workouts.map((workout) => (
+              <Link key={workout.id} to={`/workout/${workout.id}`}>
+                <Card className="p-6 h-full hover:shadow-lg cursor-pointer">
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {workout.name}
+                  </h4>
+                  <p className="text-gray-500 text-sm mt-2">
+                    {workoutLogs.some((log) => log.workoutId === workout.id)
+                      ? "✅ Concluído"
+                      : "⏳ Pendente"}
+                  </p>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </Container>
   );
 };
 

@@ -11,6 +11,10 @@ import {
   deleteExercise,
 } from "../services/firestore";
 import toast from "react-hot-toast";
+import Container from "../components/Container";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import Card from "../components/Card";
 
 const WorkoutForm = () => {
   const { id } = useParams();
@@ -101,130 +105,136 @@ const WorkoutForm = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <Container>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <Link
-            to="/workouts"
-            className="text-indigo-600 hover:text-indigo-500"
-          >
+    <Container
+      title={isEdit ? "Editar Treino" : "Criar Treino"}
+      subtitle="Configure os exercícios do seu treino"
+    >
+      <div className="mb-6">
+        <Link to="/workouts">
+          <Button variant="ghost" size="sm">
             ← Voltar
-          </Link>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900">
-            {isEdit ? "Editar Treino" : "Criar Treino"}
-          </h1>
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Nome do Treino
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <h2 className="text-lg font-medium text-gray-900">Exercícios</h2>
-              {exercises.map((exercise, index) => (
-                <div
-                  key={index}
-                  className="mt-4 p-4 border border-gray-200 rounded-md"
-                >
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      placeholder="Nome do exercício"
-                      value={exercise.name}
-                      onChange={(e) =>
-                        handleExerciseChange(index, "name", e.target.value)
-                      }
-                      required
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Número do aparelho (opcional)"
-                      value={exercise.device}
-                      onChange={(e) =>
-                        handleExerciseChange(index, "device", e.target.value)
-                      }
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Séries"
-                      value={exercise.sets}
-                      onChange={(e) =>
-                        handleExerciseChange(index, "sets", e.target.value)
-                      }
-                      required
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Repetições"
-                      value={exercise.reps}
-                      onChange={(e) =>
-                        handleExerciseChange(index, "reps", e.target.value)
-                      }
-                      required
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Peso inicial (opcional)"
-                      value={exercise.currentWeight}
-                      onChange={(e) =>
-                        handleExerciseChange(
-                          index,
-                          "currentWeight",
-                          e.target.value,
-                        )
-                      }
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                    />
-                  </div>
-                  {exercises.length > 1 && (
-                    <button
+          </Button>
+        </Link>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div>
+          <Input
+            label="Nome do Treino"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            placeholder="Ex: Treino de Peito"
+          />
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Exercícios
+          </h3>
+          <div className="space-y-6">
+            {exercises.map((exercise, index) => (
+              <Card key={index} className="p-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <Input
+                    label="Nome do exercício"
+                    type="text"
+                    value={exercise.name}
+                    onChange={(e) =>
+                      handleExerciseChange(index, "name", e.target.value)
+                    }
+                    required
+                    placeholder="Ex: Supino Reto"
+                  />
+                  <Input
+                    label="Aparelho (opcional)"
+                    type="text"
+                    value={exercise.device}
+                    onChange={(e) =>
+                      handleExerciseChange(index, "device", e.target.value)
+                    }
+                    placeholder="Ex: 1"
+                  />
+                  <Input
+                    label="Séries"
+                    type="number"
+                    value={exercise.sets}
+                    onChange={(e) =>
+                      handleExerciseChange(index, "sets", e.target.value)
+                    }
+                    required
+                    placeholder="Ex: 4"
+                  />
+                  <Input
+                    label="Repetições"
+                    type="number"
+                    value={exercise.reps}
+                    onChange={(e) =>
+                      handleExerciseChange(index, "reps", e.target.value)
+                    }
+                    required
+                    placeholder="Ex: 10"
+                  />
+                  <Input
+                    label="Peso inicial (kg)"
+                    type="number"
+                    value={exercise.currentWeight}
+                    onChange={(e) =>
+                      handleExerciseChange(
+                        index,
+                        "currentWeight",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="Ex: 80"
+                  />
+                </div>
+                {exercises.length > 1 && (
+                  <div className="mt-4 flex justify-end">
+                    <Button
                       type="button"
+                      variant="danger"
+                      size="sm"
                       onClick={() => handleRemoveExercise(index)}
-                      className="mt-2 text-red-600 hover:text-red-500"
                     >
                       Remover
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={handleAddExercise}
-                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-              >
-                Adicionar Exercício
-              </button>
-            </div>
-            <div>
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                {isEdit ? "Atualizar Treino" : "Criar Treino"}
-              </button>
-            </div>
-          </form>
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-6">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleAddExercise}
+            >
+              Adicionar Exercício
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>
+
+        <div className="flex justify-end">
+          <Button type="submit" size="lg">
+            {isEdit ? "Atualizar Treino" : "Criar Treino"}
+          </Button>
+        </div>
+      </form>
+    </Container>
   );
 };
 

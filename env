@@ -1,0 +1,6 @@
+# Copie este arquivo para .env e preencha com suas credenciais do Firebase
+VITE_FIREBASE_API_KEY= "AIzaSyDZDxAmQubgfNjc0B5qF0GjfF4ABq-khAQ"
+VITE_FIREBASE_AUTH_DOMAIN= "fittracker-fee91.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID= "fittracker-fee91"
+VITE_FIREBASE_STORAGE_BUCKET= "fittracker-fee91.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID= "834400635835"
