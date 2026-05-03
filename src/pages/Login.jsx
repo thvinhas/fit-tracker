@@ -19,7 +19,8 @@ const Login = () => {
       await loginWithEmail(email, password);
       navigate("/");
     } catch (error) {
-      toast.error("Email ou senha inválidos");
+      console.error("Login error", error);
+      toast.error(error?.message || "Email ou senha inválidos");
     } finally {
       setLoading(false);
     }
@@ -31,7 +32,8 @@ const Login = () => {
       await loginWithGoogle();
       navigate("/");
     } catch (error) {
-      toast.error("Erro ao fazer login com Google");
+      console.error("Google login error", error);
+      toast.error(error?.message || "Erro ao fazer login com Google");
     } finally {
       setLoading(false);
     }
