@@ -30,7 +30,11 @@ const Login = () => {
     setLoading(true);
     try {
       await loginWithGoogle();
-      navigate("/");
+
+      // só navega no desktop
+      if (!/iPhone|iPad|Android/i.test(navigator.userAgent)) {
+        navigate("/");
+      }
     } catch (error) {
       console.error("Google login error", error);
       toast.error(error?.message || "Erro ao fazer login com Google");
