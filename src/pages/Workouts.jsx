@@ -83,15 +83,20 @@ const Workouts = () => {
                 </h4>
                 <div className="flex gap-2">
                   <Link to={`/workouts/${workout.id}/edit`} className="flex-1">
-                    <Button variant="secondary" size="sm" className="w-full">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                    >
                       Editar
                     </Button>
                   </Link>
                   <Button
+                    type="button"
                     variant="danger"
                     size="sm"
                     onClick={() => handleDelete(workout.id)}
-                    className="flex-1"
+                    className="flex-1 !bg-red-500 !text-white"
                   >
                     Excluir
                   </Button>
