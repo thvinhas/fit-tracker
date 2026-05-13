@@ -2,8 +2,12 @@ const Card = ({ children, className = "", highlighted = false }) => {
   return (
     <div
       className={`
-        bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200
-        ${highlighted ? "border-2 border-indigo-500 bg-indigo-50" : "border border-gray-200"}
+        rounded-2xl transition-all duration-200
+        ${
+          highlighted
+            ? "border border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_32px_-8px_rgba(52,211,153,0.25)]"
+            : "border border-white/10 bg-white/[0.03] hover:border-white/15"
+        }
         ${className}
       `}
     >

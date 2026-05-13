@@ -8,11 +8,10 @@ import {
   addExercise,
   updateExercise,
   getExercises,
-  deleteExercise,
 } from "../services/firestore";
 import toast from "react-hot-toast";
 import Container from "../components/Container";
-import Button from "../components/Button";
+import Button, { buttonGhostLinkClass } from "../components/Button";
 import Input from "../components/Input";
 import Card from "../components/Card";
 
@@ -88,13 +87,22 @@ const WorkoutForm = () => {
         workoutId = workoutRef.id;
       }
 
-      // Handle exercises
+      // Handle exercises — `order` preserva a sequência do formulário (1º = primeiro no treino)
       for (let i = 0; i < exercises.length; i++) {
         const exercise = exercises[i];
-        if (exercise.id) {
-          await updateExercise(exercise.id, exercise);
+        const { id: exerciseDocId, ...fields } = exercise;
+        const payload = {
+          ...fields,
+          workoutId,
+          order: i,
+        };
+        if (exerciseDocId) {
+          await updateExercise(exerciseDocId, payload);
         } else {
-          await addExercise({ ...exercise, workoutId });
+          await addExercise({
+            ...payload,
+            createdAt: new Date(),
+          });
         }
       }
 
@@ -105,11 +113,21 @@ const WorkoutForm = () => {
     }
   };
 
+  if (authLoading) {
+    return (
+      <Container>
+        <div className="flex justify-center py-16">
+          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+        </div>
+      </Container>
+    );
+  }
+
   if (loading) {
     return (
       <Container>
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="flex justify-center py-16">
+          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
         </div>
       </Container>
     );
@@ -117,16 +135,12 @@ const WorkoutForm = () => {
 
   return (
     <Container
-      title={isEdit ? "Editar Treino" : "Criar Treino"}
-      subtitle="Configure os exercícios do seu treino"
+      title={isEdit ? "Editar treino" : "Novo treino"}
+      subtitle="Monte o plano; durante a sessão o registro é rápido."
     >
-      <div className="mb-6">
-        <Link to="/workouts">
-          <Button variant="ghost" size="sm">
-            ← Voltar
-          </Button>
-        </Link>
-      </div>
+      <Link to="/workouts" className={`${buttonGhostLinkClass} mb-6`}>
+        ← Voltar
+      </Link>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div>

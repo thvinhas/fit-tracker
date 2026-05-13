@@ -1,10 +1,45 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getWorkouts, getWorkoutLogs } from "../services/firestore";
 import Container from "../components/Container";
-import Button from "../components/Button";
 import Card from "../components/Card";
+import { buttonPrimaryLinkClass, buttonGhostLinkClass } from "../components/Button";
+
+const localDayKey = (ms) => {
+  const d = new Date(ms);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${da}`;
+};
+
+const logMs = (log) => (log.date?.seconds ? log.date.seconds * 1000 : 0);
+
+const computeStreak = (logs) => {
+  const keys = new Set(logs.map((l) => localDayKey(logMs(l))));
+  if (keys.size === 0) return 0;
+  const anchor = new Date();
+  anchor.setHours(0, 0, 0, 0);
+  let check = new Date(anchor);
+  if (!keys.has(localDayKey(check.getTime()))) {
+    check.setDate(check.getDate() - 1);
+  }
+  let streak = 0;
+  for (;;) {
+    const k = localDayKey(check.getTime());
+    if (!keys.has(k)) break;
+    streak += 1;
+    check.setDate(check.getDate() - 1);
+  }
+  return streak;
+};
+
+const sessionsThisWeek = (logs) => {
+  const now = Date.now();
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  return logs.filter((l) => logMs(l) >= weekAgo).length;
+};
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -13,123 +48,160 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      const fetchData = async () => {
-        try {
-          const workoutsData = await getWorkouts(user.uid);
-          const logsData = await getWorkoutLogs(user.uid);
-          setWorkouts(workoutsData);
-          setWorkoutLogs(logsData);
-        } catch (error) {
-          console.error("Erro ao carregar dados:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchData();
-    }
+    if (!user) return;
+    const fetchData = async () => {
+      try {
+        const workoutsData = await getWorkouts(user.uid);
+        const logsData = await getWorkoutLogs(user.uid);
+        setWorkouts(workoutsData);
+        setWorkoutLogs(logsData);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, [user]);
 
-  if (authLoading) return <div>Loading...</div>;
-
-  const getWorkoutOfTheDay = () => {
+  const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;
-    const completedWorkouts = workoutLogs.map((log) => log.workoutId);
-    const nextWorkout = workouts.find(
-      (workout) => !completedWorkouts.includes(workout.id),
-    );
-    return nextWorkout || workouts[0];
-  };
+    const completedIds = workoutLogs.map((log) => log.workoutId);
+    const next = workouts.find((w) => !completedIds.includes(w.id));
+    return next || workouts[0];
+  }, [workouts, workoutLogs]);
 
-  const workoutOfTheDay = getWorkoutOfTheDay();
+  const streak = useMemo(() => computeStreak(workoutLogs), [workoutLogs]);
+  const weekCount = useMemo(() => sessionsThisWeek(workoutLogs), [workoutLogs]);
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+        <p className="text-sm text-zinc-500">Carregando…</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
-      <Container title="Dashboard" subtitle="Carregando seus treinos...">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <Container title="Início" subtitle="Carregando seu espaço…">
+        <div className="flex justify-center py-16">
+          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
         </div>
       </Container>
     );
   }
 
   return (
-    <Container title="Dashboard" subtitle="Bem-vindo ao seu espaço de treinos">
-      {/* Action Buttons */}
-      <div className="mb-8 flex gap-4">
-        <Link to="/workouts" className="flex-1 sm:flex-none">
-          <Button size="md">⚙️ Área de Treino</Button>
-        </Link>
+    <Container title="Início" subtitle="Foco no treino de hoje.">
+      <div className="flex gap-3 mb-8">
+        <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
+            Streak
+          </p>
+          <p className="text-2xl font-bold text-emerald-400 tabular-nums mt-0.5">
+            {streak}
+            <span className="text-sm font-semibold text-zinc-500 ml-1">dias</span>
+          </p>
+        </div>
+        <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
+            7 dias
+          </p>
+          <p className="text-2xl font-bold text-zinc-50 tabular-nums mt-0.5">
+            {weekCount}
+            <span className="text-sm font-semibold text-zinc-500 ml-1">sessões</span>
+          </p>
+        </div>
       </div>
 
-      {/* Workout of the Day */}
       {workoutOfTheDay ? (
-        <div className="mb-12">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="text-2xl">🎯</span>
-            Treino do Dia
-          </h3>
-          <Card highlighted className="p-6">
-            <div className="space-y-6">
-              <Link
-                key={workoutOfTheDay.id}
-                to={`/workout/${workoutOfTheDay.id}`}
-              >
-                <div>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold">
-                    Destaque
-                  </span>
-                  <h4 className="mt-4 text-2xl font-bold text-indigo-600">
-                    {workoutOfTheDay.name}
-                  </h4>
-                  <p className="text-gray-600 mt-3">
-                    Próximo treino na sequência
-                  </p>
-                </div>
-              </Link>
-            </div>
+        <div className="mb-10">
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">
+            Próximo treino
+          </p>
+          <Card highlighted className="p-5">
+            <h2 className="text-xl font-bold text-zinc-50 leading-tight">
+              {workoutOfTheDay.name}
+            </h2>
+            <p className="text-sm text-zinc-400 mt-2 mb-6">
+              Veja os exercícios ou comece a sessão agora.
+            </p>
+            <Link
+              to={`/workout/${workoutOfTheDay.id}/start`}
+              className={buttonPrimaryLinkClass}
+            >
+              Iniciar treino
+            </Link>
+            <Link
+              to={`/workout/${workoutOfTheDay.id}`}
+              className={`${buttonGhostLinkClass} w-full mt-3 justify-center`}
+            >
+              Ver plano
+            </Link>
           </Card>
         </div>
       ) : (
-        <div className="mb-12 p-6 bg-amber-50 border border-amber-200 rounded-xl">
-          <p className="text-amber-900 font-medium">
-            ℹ️ Crie um treino para começar!
+        <Card className="p-6 mb-10 border-amber-500/30 bg-amber-500/5">
+          <p className="text-sm text-amber-100/90 font-medium">
+            Crie um treino para começar a registrar progresso.
           </p>
-        </div>
+          <Link to="/workouts/new" className={`${buttonPrimaryLinkClass} mt-4`}>
+            Criar treino
+          </Link>
+        </Card>
       )}
 
-      {/* All Workouts */}
-      <div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <span className="text-2xl">💪</span>
-          Todos os Treinos
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-500">
+          Seus planos
         </h3>
-        {workouts.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-gray-500 mb-4">Nenhum treino criado ainda</p>
-            <Link to="/workouts">
-              <Button>Criar seu primeiro treino</Button>
-            </Link>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {workouts.map((workout) => (
+        <Link
+          to="/workouts"
+          className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+        >
+          Gerenciar →
+        </Link>
+      </div>
+
+      {workouts.length === 0 ? (
+        <Card className="p-8 text-center">
+          <p className="text-zinc-500 text-sm mb-4">Ainda sem treinos salvos.</p>
+          <Link to="/workouts/new" className={buttonPrimaryLinkClass}>
+            Criar primeiro treino
+          </Link>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {workouts.map((workout) => {
+            const done = workoutLogs.some((log) => log.workoutId === workout.id);
+            return (
               <Link key={workout.id} to={`/workout/${workout.id}`}>
-                <Card className="p-6 h-full hover:shadow-lg cursor-pointer">
-                  <h4 className="text-lg font-bold text-gray-900">
-                    {workout.name}
-                  </h4>
-                  <p className="text-gray-500 text-sm mt-2">
-                    {workoutLogs.some((log) => log.workoutId === workout.id)
-                      ? "✅ Concluído"
-                      : "⏳ Pendente"}
-                  </p>
+                <Card className="p-4 flex items-center justify-between gap-3 active:scale-[0.99] transition-transform">
+                  <div className="min-w-0">
+                    <h4 className="text-base font-semibold text-zinc-100 truncate">
+                      {workout.name}
+                    </h4>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {done ? "Última sessão registada" : "Por fazer"}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${
+                      done
+                        ? "bg-emerald-500/15 text-emerald-400"
+                        : "bg-zinc-800 text-zinc-400"
+                    }`}
+                  >
+                    {done ? "Feito" : "Abrir"}
+                  </span>
                 </Card>
               </Link>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </Container>
   );
 };

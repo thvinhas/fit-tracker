@@ -4,14 +4,15 @@ const Accordion = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border border-gray-200 rounded-lg">
+    <div className="border border-white/10 rounded-xl overflow-hidden bg-zinc-900/40">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors text-left"
       >
-        <span className="font-medium text-gray-900">{title}</span>
+        <span className="font-medium text-zinc-200 text-sm">{title}</span>
         <svg
-          className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
+          className={`w-5 h-5 text-zinc-500 transition-transform duration-200 shrink-0 ${
             isOpen ? "rotate-180" : ""
           }`}
           fill="none"
@@ -27,7 +28,7 @@ const Accordion = ({ title, children }) => {
         </svg>
       </button>
       {isOpen && (
-        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 animate-in fade-in duration-200">
+        <div className="px-4 py-3 border-t border-white/10 bg-zinc-950/50">
           {children}
         </div>
       )}

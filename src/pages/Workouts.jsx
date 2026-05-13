@@ -4,8 +4,11 @@ import { useAuth } from "../hooks/useAuth";
 import { getWorkouts, deleteWorkout } from "../services/firestore";
 import toast from "react-hot-toast";
 import Container from "../components/Container";
-import Button from "../components/Button";
 import Card from "../components/Card";
+import Button, {
+  buttonPrimaryLinkClass,
+  buttonSecondaryLinkClass,
+} from "../components/Button";
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
@@ -13,99 +16,92 @@ const Workouts = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      const fetchWorkouts = async () => {
-        const workoutsData = await getWorkouts(user.uid);
-        setWorkouts(workoutsData);
-        setLoading(false);
-      };
-      fetchWorkouts();
-    }
+    if (!user) return;
+    const fetchWorkouts = async () => {
+      const workoutsData = await getWorkouts(user.uid);
+      setWorkouts(workoutsData);
+      setLoading(false);
+    };
+    fetchWorkouts();
   }, [user]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (workoutId) => {
+    if (!window.confirm("Excluir este treino? Esta ação não pode ser desfeita.")) {
+      return;
+    }
     try {
-      await deleteWorkout(id);
-      setWorkouts(workouts.filter((workout) => workout.id !== id));
-      toast.success("Treino excluído!");
+      await deleteWorkout(workoutId);
+      setWorkouts((prev) => prev.filter((w) => w.id !== workoutId));
+      toast.success("Treino excluído.");
     } catch (error) {
-      toast.error("Erro ao excluir treino: " + error.message);
+      toast.error("Erro ao excluir: " + error.message);
     }
   };
 
   if (authLoading) {
     return (
-      <Container>
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
-      </Container>
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+        <p className="text-sm text-zinc-500">Carregando…</p>
+      </div>
     );
   }
 
   return (
-    <Container title="Área de Treino" subtitle="Gerencie seus treinos">
-      <div className="mb-6">
-        <Link to="/">
-          <Button variant="ghost" size="sm">
-            ← Voltar ao Dashboard
-          </Button>
-        </Link>
-      </div>
+    <Container title="Treinos" subtitle="Planos e edição rápida.">
+      <Link to="/workouts/new" className={`${buttonPrimaryLinkClass} mb-8`}>
+        Novo treino
+      </Link>
 
-      <div className="mb-8">
-        <Link to="/workouts/new">
-          <Button size="lg">Criar Novo Treino</Button>
-        </Link>
-      </div>
+      <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-500 mb-3">
+        Biblioteca
+      </h3>
 
-      <div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">
-          Seus Treinos
-        </h3>
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          </div>
-        ) : workouts.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-gray-500 mb-4">Nenhum treino criado ainda</p>
-            <Link to="/workouts/new">
-              <Button>Criar seu primeiro treino</Button>
-            </Link>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {workouts.map((workout) => (
-              <Card key={workout.id} className="p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                  {workout.name}
-                </h4>
-                <div className="flex gap-2">
-                  <Link to={`/workouts/${workout.id}/edit`} className="flex-1">
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      Editar
-                    </Button>
-                  </Link>
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(workout.id)}
-                    className="flex-1 !bg-red-500 !text-white"
-                  >
-                    Excluir
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+        </div>
+      ) : workouts.length === 0 ? (
+        <Card className="p-8 text-center">
+          <p className="text-zinc-500 text-sm mb-4">Nenhum treino ainda.</p>
+          <Link to="/workouts/new" className={buttonPrimaryLinkClass}>
+            Criar treino
+          </Link>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {workouts.map((workout) => (
+            <Card key={workout.id} className="p-4">
+              <h4 className="text-base font-semibold text-zinc-100 mb-4">
+                {workout.name}
+              </h4>
+              <div className="flex gap-2">
+                <Link
+                  to={`/workout/${workout.id}`}
+                  className={`${buttonSecondaryLinkClass} flex-1`}
+                >
+                  Abrir
+                </Link>
+                <Link
+                  to={`/workouts/${workout.id}/edit`}
+                  className={`${buttonSecondaryLinkClass} flex-1`}
+                >
+                  Editar
+                </Link>
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                  className="flex-1 !px-2"
+                  onClick={() => handleDelete(workout.id)}
+                >
+                  Excluir
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </Container>
   );
 };

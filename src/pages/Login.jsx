@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
@@ -9,15 +9,21 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { loginWithEmail, loginWithGoogle } = useAuth();
+  const { user, loading: authLoading, loginWithEmail, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       await loginWithEmail(email, password);
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Login error", error);
       toast.error(error?.message || "Email ou senha inválidos");
@@ -30,10 +36,8 @@ const Login = () => {
     setLoading(true);
     try {
       await loginWithGoogle();
-
-      // só navega no desktop
       if (!/iPhone|iPad|Android/i.test(navigator.userAgent)) {
-        navigate("/");
+        navigate("/", { replace: true });
       }
     } catch (error) {
       console.error("Google login error", error);
@@ -43,20 +47,26 @@ const Login = () => {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen min-h-[100dvh] bg-zinc-950 flex items-center justify-center">
+        <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center px-4">
+    <div className="min-h-screen min-h-[100dvh] bg-zinc-950 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">FT</span>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center mx-auto mb-4 shadow-[0_0_32px_-6px_rgba(52,211,153,0.45)]">
+            <span className="text-zinc-950 font-bold text-2xl">FT</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Fit Tracker</h1>
-          <p className="text-gray-600 mt-2">Organize seus treinos facilmente</p>
+          <h1 className="text-3xl font-bold text-zinc-50 tracking-tight">Fit Tracker</h1>
+          <p className="text-zinc-500 mt-2 text-sm">Entre para continuar</p>
         </div>
 
-        {/* Form */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 space-y-6 shadow-2xl">
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <Input
               label="Email"
@@ -77,18 +87,16 @@ const Login = () => {
               disabled={loading}
             />
             <Button type="submit" size="lg" disabled={loading}>
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Entrando…" : "Entrar"}
             </Button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-sm text-gray-500">ou</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-xs text-zinc-500">ou</span>
+            <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          {/* Google Login */}
           <Button
             type="button"
             variant="secondary"
@@ -96,7 +104,7 @@ const Login = () => {
             onClick={handleGoogleLogin}
             disabled={loading}
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden>
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -118,9 +126,8 @@ const Login = () => {
           </Button>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Use as credenciais do seu Firebase para fazer login
+        <p className="text-center text-xs text-zinc-600 mt-6">
+          Credenciais do seu projeto Firebase
         </p>
       </div>
     </div>

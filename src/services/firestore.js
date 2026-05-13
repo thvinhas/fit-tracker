@@ -38,7 +38,18 @@ export const getExercises = async (workoutId) => {
     where("workoutId", "==", workoutId),
   );
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return list.sort((a, b) => {
+    const oa = a.order;
+    const ob = b.order;
+    if (oa != null && ob != null && oa !== ob) return oa - ob;
+    if (oa != null && ob == null) return -1;
+    if (oa == null && ob != null) return 1;
+    const ta = a.createdAt?.seconds ?? 0;
+    const tb = b.createdAt?.seconds ?? 0;
+    if (ta !== tb) return ta - tb;
+    return String(a.id).localeCompare(String(b.id));
+  });
 };
 
 export const addExercise = async (exercise) => {
