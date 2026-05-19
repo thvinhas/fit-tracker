@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getWorkouts, deleteWorkout } from "../services/firestore";
 import toast from "react-hot-toast";
@@ -12,6 +12,7 @@ import Button, {
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,10 +24,12 @@ const Workouts = () => {
       setLoading(false);
     };
     fetchWorkouts();
-  }, [user]);
+  }, [user, location]);
 
   const handleDelete = async (workoutId) => {
-    if (!window.confirm("Excluir este treino? Esta ação não pode ser desfeita.")) {
+    if (
+      !window.confirm("Excluir este treino? Esta ação não pode ser desfeita.")
+    ) {
       return;
     }
     try {

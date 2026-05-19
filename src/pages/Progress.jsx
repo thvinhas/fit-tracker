@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { getWorkoutLogs } from "../services/firestore";
+import { getSessions } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 
@@ -41,24 +41,24 @@ const sessionsThisWeek = (logs) => {
 
 const Progress = () => {
   const { user, loading: authLoading } = useAuth();
-  const [logs, setLogs] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
       try {
-        const data = await getWorkoutLogs(user.uid);
-        setLogs(data);
+        const data = await getSessions(user.uid);
+        setSessions(data);
       } finally {
         setLoading(false);
       }
     })();
   }, [user]);
 
-  const streak = useMemo(() => computeStreak(logs), [logs]);
-  const weekCount = useMemo(() => sessionsThisWeek(logs), [logs]);
-  const total = logs.length;
+  const streak = useMemo(() => computeStreak(sessions), [sessions]);
+  const weekCount = useMemo(() => sessionsThisWeek(sessions), [sessions]);
+  const total = sessions.length;
 
   if (authLoading || loading) {
     return (
@@ -70,9 +70,7 @@ const Progress = () => {
     );
   }
 
-  const recent = [...logs]
-    .sort((a, b) => logMs(b) - logMs(a))
-    .slice(0, 8);
+  const recent = [...sessions].sort((a, b) => logMs(b) - logMs(a)).slice(0, 8);
 
   return (
     <Container title="Progresso" subtitle="Consistência e ritmo.">
@@ -83,7 +81,9 @@ const Progress = () => {
           </p>
           <p className="text-2xl font-bold text-emerald-400 mt-1 tabular-nums">
             {streak}
-            <span className="text-xs font-semibold text-zinc-500 ml-1">dias</span>
+            <span className="text-xs font-semibold text-zinc-500 ml-1">
+              dias
+            </span>
           </p>
         </Card>
         <Card className="p-4">
@@ -92,7 +92,9 @@ const Progress = () => {
           </p>
           <p className="text-2xl font-bold text-zinc-50 mt-1 tabular-nums">
             {weekCount}
-            <span className="text-xs font-semibold text-zinc-500 ml-1">sessões</span>
+            <span className="text-xs font-semibold text-zinc-500 ml-1">
+              sessões
+            </span>
           </p>
         </Card>
       </div>
@@ -102,7 +104,10 @@ const Progress = () => {
           Total
         </p>
         <p className="text-xl font-bold text-zinc-100 mt-1 tabular-nums">
-          {total} <span className="text-sm font-medium text-zinc-500">treinos concluídos</span>
+          {total}{" "}
+          <span className="text-sm font-medium text-zinc-500">
+            treinos concluídos
+          </span>
         </p>
       </Card>
 

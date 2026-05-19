@@ -7,6 +7,7 @@ import {
   addWorkoutLog,
   addExerciseLog,
   getExerciseLogs,
+  addSession,
 } from "../services/firestore";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
@@ -28,7 +29,9 @@ const WeightStepper = ({ value, onChange, disabled }) => (
       −
     </button>
     <div className="min-w-[5.5rem] text-center">
-      <span className="text-xl font-bold tabular-nums text-zinc-50">{value}</span>
+      <span className="text-xl font-bold tabular-nums text-zinc-50">
+        {value}
+      </span>
       <span className="text-sm font-medium text-zinc-500 ml-1">kg</span>
     </div>
     <button
@@ -74,6 +77,7 @@ const WorkoutStart = () => {
   const [lastByExercise, setLastByExercise] = useState({});
   const [setStates, setSetStates] = useState({});
   const [loading, setLoading] = useState(true);
+  const [sessionStartTime] = useState(() => Date.now());
 
   useEffect(() => {
     const load = async () => {
@@ -111,25 +115,42 @@ const WorkoutStart = () => {
   }, [id]);
 
   const updateSet = useCallback((exerciseId, setIndex, patch) => {
-    setSetStates((prev) => ({
-      ...prev,
-      [exerciseId]: prev[exerciseId].map((row, i) =>
-        i === setIndex ? { ...row, ...patch } : row,
-      ),
-    }));
+    setSetStates((prev) => {
+      const exerciseSets = prev[exerciseId];
+      const updatedSets = exerciseSets.map((row, i) => {
+        if (i === setIndex) {
+          return { ...row, ...patch };
+        }
+        if (i > setIndex && !row.completed) {
+          if (patch.weight !== undefined) {
+            return { ...row, weight: patch.weight };
+          }
+          if (patch.reps !== undefined) {
+            return { ...row, reps: patch.reps };
+          }
+        }
+        return row;
+      });
+      return {
+        ...prev,
+        [exerciseId]: updatedSets,
+      };
+    });
   }, []);
 
   const handleFinishWorkout = async () => {
     try {
-      await addWorkoutLog({
-        workoutId: id,
-        userId: user.uid,
-        date: new Date(),
-      });
+      const sessionEndTime = Date.now();
+      const duration = sessionEndTime - sessionStartTime;
+
+      let totalVolume = 0;
+      let completedSetsCount = 0;
+      let completedExercisesCount = 0;
 
       for (const exercise of exercises) {
         const rows = setStates[exercise.id] || [];
         let lastWeight = Number(exercise.currentWeight) || 0;
+        let exerciseHasCompletedSets = false;
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
@@ -137,20 +158,59 @@ const WorkoutStart = () => {
           const w = Number(row.weight) || 0;
           const r = Number(row.reps) || 0;
           lastWeight = w;
+          totalVolume += w * r;
+          completedSetsCount++;
+          exerciseHasCompletedSets = true;
+        }
+
+        if (exerciseHasCompletedSets) {
+          completedExercisesCount++;
+          await updateExercise(exercise.id, { currentWeight: lastWeight });
+        }
+      }
+
+      if (completedSetsCount === 0) {
+        toast.error("Complete pelo menos uma série para finalizar.");
+        return;
+      }
+
+      const sessionRef = await addSession({
+        workoutId: id,
+        userId: user.uid,
+        date: new Date(),
+        duration,
+        totalVolume,
+        exerciseCount: completedExercisesCount,
+        setCount: completedSetsCount,
+      });
+
+      const sessionId = sessionRef.id;
+
+      for (const exercise of exercises) {
+        const rows = setStates[exercise.id] || [];
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row.completed) continue;
+          const w = Number(row.weight) || 0;
+          const r = Number(row.reps) || 0;
           await addExerciseLog({
             exerciseId: exercise.id,
             weight: w,
             reps: r,
             setIndex: i + 1,
             workoutId: id,
+            sessionId,
             date: new Date(),
           });
         }
-
-        if (rows.some((r) => r.completed)) {
-          await updateExercise(exercise.id, { currentWeight: lastWeight });
-        }
       }
+
+      await addWorkoutLog({
+        workoutId: id,
+        userId: user.uid,
+        date: new Date(),
+      });
 
       toast.success("Treino concluído!");
       navigate("/", { replace: true });
@@ -159,15 +219,18 @@ const WorkoutStart = () => {
     }
   };
 
-  const lastLabel = useCallback((exerciseId) => {
-    const last = lastByExercise[exerciseId];
-    if (!last) return null;
-    const w = last.weight != null ? `${last.weight} kg` : null;
-    const r = last.reps != null ? `${last.reps} reps` : null;
-    if (w && r) return `${w} × ${r}`;
-    if (w) return w;
-    return null;
-  }, [lastByExercise]);
+  const lastLabel = useCallback(
+    (exerciseId) => {
+      const last = lastByExercise[exerciseId];
+      if (!last) return null;
+      const w = last.weight != null ? `${last.weight} kg` : null;
+      const r = last.reps != null ? `${last.reps} reps` : null;
+      if (w && r) return `${w} × ${r}`;
+      if (w) return w;
+      return null;
+    },
+    [lastByExercise],
+  );
 
   const completedCount = useMemo(() => {
     return exercises.reduce((acc, ex) => {
@@ -228,7 +291,9 @@ const WorkoutStart = () => {
               : "";
             const subtitle = [
               device ? `Aparelho ${device}` : null,
-              lastLabel(exercise.id) ? `Último: ${lastLabel(exercise.id)}` : null,
+              lastLabel(exercise.id)
+                ? `Último: ${lastLabel(exercise.id)}`
+                : null,
             ]
               .filter(Boolean)
               .join(" · ");
@@ -273,9 +338,7 @@ const WorkoutStart = () => {
                               : "border-white/20 text-zinc-500 hover:border-emerald-500/50 hover:text-emerald-400"
                           }`}
                           aria-label={
-                            row.completed
-                              ? "Desmarcar série"
-                              : "Concluir série"
+                            row.completed ? "Desmarcar série" : "Concluir série"
                           }
                         >
                           <AnimatePresence mode="wait" initial={false}>

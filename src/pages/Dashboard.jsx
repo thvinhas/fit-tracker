@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { getWorkouts, getWorkoutLogs } from "../services/firestore";
+import { getWorkouts, getSessions } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
-import { buttonPrimaryLinkClass, buttonGhostLinkClass } from "../components/Button";
+import {
+  buttonPrimaryLinkClass,
+  buttonGhostLinkClass,
+} from "../components/Button";
 
 const localDayKey = (ms) => {
   const d = new Date(ms);
@@ -43,18 +46,22 @@ const sessionsThisWeek = (logs) => {
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
   const [workouts, setWorkouts] = useState([]);
-  const [workoutLogs, setWorkoutLogs] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
       try {
+        console.log("Carregando dados para userId:", user.uid);
         const workoutsData = await getWorkouts(user.uid);
-        const logsData = await getWorkoutLogs(user.uid);
+        console.log("Workouts carregados:", workoutsData);
+        const sessionsData = await getSessions(user.uid);
+        console.log("Sessions carregados:", sessionsData);
         setWorkouts(workoutsData);
-        setWorkoutLogs(logsData);
+        setSessions(sessionsData);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -62,17 +69,17 @@ const Dashboard = () => {
       }
     };
     fetchData();
-  }, [user]);
+  }, [user, location]);
 
   const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;
-    const completedIds = workoutLogs.map((log) => log.workoutId);
+    const completedIds = sessions.map((session) => session.workoutId);
     const next = workouts.find((w) => !completedIds.includes(w.id));
     return next || workouts[0];
-  }, [workouts, workoutLogs]);
+  }, [workouts, sessions]);
 
-  const streak = useMemo(() => computeStreak(workoutLogs), [workoutLogs]);
-  const weekCount = useMemo(() => sessionsThisWeek(workoutLogs), [workoutLogs]);
+  const streak = useMemo(() => computeStreak(sessions), [sessions]);
+  const weekCount = useMemo(() => sessionsThisWeek(sessions), [sessions]);
 
   if (authLoading) {
     return (
@@ -102,7 +109,9 @@ const Dashboard = () => {
           </p>
           <p className="text-2xl font-bold text-emerald-400 tabular-nums mt-0.5">
             {streak}
-            <span className="text-sm font-semibold text-zinc-500 ml-1">dias</span>
+            <span className="text-sm font-semibold text-zinc-500 ml-1">
+              dias
+            </span>
           </p>
         </div>
         <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
@@ -111,7 +120,9 @@ const Dashboard = () => {
           </p>
           <p className="text-2xl font-bold text-zinc-50 tabular-nums mt-0.5">
             {weekCount}
-            <span className="text-sm font-semibold text-zinc-500 ml-1">sessões</span>
+            <span className="text-sm font-semibold text-zinc-500 ml-1">
+              sessões
+            </span>
           </p>
         </div>
       </div>
@@ -167,7 +178,9 @@ const Dashboard = () => {
 
       {workouts.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-zinc-500 text-sm mb-4">Ainda sem treinos salvos.</p>
+          <p className="text-zinc-500 text-sm mb-4">
+            Ainda sem treinos salvos.
+          </p>
           <Link to="/workouts/new" className={buttonPrimaryLinkClass}>
             Criar primeiro treino
           </Link>
@@ -175,7 +188,9 @@ const Dashboard = () => {
       ) : (
         <div className="flex flex-col gap-3">
           {workouts.map((workout) => {
-            const done = workoutLogs.some((log) => log.workoutId === workout.id);
+            const done = sessions.some(
+              (session) => session.workoutId === workout.id,
+            );
             return (
               <Link key={workout.id} to={`/workout/${workout.id}`}>
                 <Card className="p-4 flex items-center justify-between gap-3 active:scale-[0.99] transition-transform">
