@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import {
   buttonPrimaryLinkClass,
   buttonGhostLinkClass,
 } from "../components/Button";
+import { useOfflineStorage } from "../hooks/useOfflineStorage";
 
 const logTime = (log) =>
   log.date?.seconds != null ? log.date.seconds * 1000 : 0;
@@ -23,25 +24,38 @@ const WorkoutView = () => {
   const [exerciseLogs, setExerciseLogs] = useState({});
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { saveWorkout, getWorkout, isOnline } = useOfflineStorage();
 
   useEffect(() => {
     const fetchData = async () => {
-      const exercisesData = await getExercises(id);
-      const logsPromises = exercisesData.map(async (exercise) => {
-        const logs = await getExerciseLogs(exercise.id);
-        return { exerciseId: exercise.id, logs };
-      });
-      const logsData = await Promise.all(logsPromises);
-      const logsMap = {};
-      logsData.forEach(({ exerciseId, logs }) => {
-        logsMap[exerciseId] = logs;
-      });
-      setExercises(exercisesData);
-      setExerciseLogs(logsMap);
-      setLoading(false);
+      try {
+        // Try to get from offline storage first
+        const offlineWorkout = await getWorkout(id);
+
+        const exercisesData = await getExercises(id);
+        const logsPromises = exercisesData.map(async (exercise) => {
+          const logs = await getExerciseLogs(exercise.id);
+          return { exerciseId: exercise.id, logs };
+        });
+        const logsData = await Promise.all(logsPromises);
+        const logsMap = {};
+        logsData.forEach(({ exerciseId, logs }) => {
+          logsMap[exerciseId] = logs;
+        });
+        setExercises(exercisesData);
+        setExerciseLogs(logsMap);
+
+        // Save to offline storage
+        await saveWorkout({ id, exercises: exercisesData });
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching workout data:", error);
+        setLoading(false);
+      }
     };
     fetchData();
-  }, [id]);
+  }, [id, saveWorkout, getWorkout]);
 
   const groupedHistoryByExercise = useMemo(() => {
     const grouped = {};
@@ -145,7 +159,10 @@ const WorkoutView = () => {
 
   return (
     <Container title="Plano" subtitle="Revisão rápida antes da sessão.">
-      <Link to="/workouts" className={`${buttonGhostLinkClass} mb-6`}>
+      <Link
+        to="/workouts"
+        className={`${buttonGhostLinkClass} mb-6 touch-feedback min-h-[44px] flex items-center`}
+      >
         ← Treinos
       </Link>
 
@@ -153,16 +170,17 @@ const WorkoutView = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="gpu-accelerated"
       >
         <Link
           to={`/workout/${id}/start`}
-          className={`${buttonPrimaryLinkClass} mb-8`}
+          className={`${buttonPrimaryLinkClass} mb-8 touch-feedback min-h-[48px] flex items-center justify-center`}
         >
           Começar treino
         </Link>
       </motion.div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 smooth-scroll">
         {exercises.length === 0 ? (
           <Card className="p-8 text-center">
             <p className="text-text-muted text-sm">
@@ -181,8 +199,9 @@ const WorkoutView = () => {
                 stiffness: 400,
                 damping: 25,
               }}
+              className="gpu-accelerated"
             >
-              <Card className="p-4">
+              <Card className="p-4 touch-feedback">
                 <div className="mb-3">
                   <h3 className="text-base font-bold text-text-primary">
                     {exercise.name}
@@ -214,7 +233,7 @@ const WorkoutView = () => {
                         return (
                           <div
                             key={session.sessionId}
-                            className="flex justify-between gap-3 text-sm text-text-tertiary"
+                            className="flex justify-between gap-3 text-sm text-text-tertiary py-2"
                           >
                             <span>
                               {logTime(session)
