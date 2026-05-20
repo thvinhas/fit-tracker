@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   getExercises,
   getExerciseLogs,
@@ -78,7 +79,56 @@ const WorkoutView = () => {
         })
         .sort((a, b) => logTime(b) - logTime(a));
 
-      grouped[exercise.id] = sessionsArray.slice(0, 10);
+      // Filter to show only meaningful progressions
+      const filteredSessions = [];
+      const sortedByOldest = [...sessionsArray].sort(
+        (a, b) => logTime(a) - logTime(b),
+      );
+
+      let maxWeightSeen = 0;
+      let maxRepsAtMaxWeight = 0;
+
+      sortedByOldest.forEach((session) => {
+        const weight = session.bestWeight || 0;
+        const reps = session.bestReps || 0;
+
+        // Always include the first session (baseline)
+        if (filteredSessions.length === 0) {
+          filteredSessions.push(session);
+          maxWeightSeen = weight;
+          maxRepsAtMaxWeight = reps;
+          return;
+        }
+
+        // Include if weight increased
+        if (weight > maxWeightSeen) {
+          filteredSessions.push(session);
+          maxWeightSeen = weight;
+          maxRepsAtMaxWeight = reps;
+          return;
+        }
+
+        // Include if same weight but reps increased
+        if (weight === maxWeightSeen && reps > maxRepsAtMaxWeight) {
+          filteredSessions.push(session);
+          maxRepsAtMaxWeight = reps;
+          return;
+        }
+
+        // Include if it's a PR in reps at a lower weight (meaningful progression)
+        const previousBestReps = Math.max(
+          ...filteredSessions.map((s) => s.bestReps || 0),
+        );
+        if (reps > previousBestReps && weight >= maxWeightSeen * 0.9) {
+          filteredSessions.push(session);
+          return;
+        }
+      });
+
+      // Sort back to newest first for display
+      grouped[exercise.id] = filteredSessions.sort(
+        (a, b) => logTime(b) - logTime(a),
+      );
     });
     return grouped;
   }, [exercises, exerciseLogs]);
@@ -87,7 +137,7 @@ const WorkoutView = () => {
     return (
       <Container>
         <div className="flex justify-center py-16">
-          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+          <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
         </div>
       </Container>
     );
@@ -99,84 +149,102 @@ const WorkoutView = () => {
         ← Treinos
       </Link>
 
-      <Link
-        to={`/workout/${id}/start`}
-        className={`${buttonPrimaryLinkClass} mb-8`}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
-        Começar treino
-      </Link>
+        <Link
+          to={`/workout/${id}/start`}
+          className={`${buttonPrimaryLinkClass} mb-8`}
+        >
+          Começar treino
+        </Link>
+      </motion.div>
 
       <div className="space-y-3">
         {exercises.length === 0 ? (
           <Card className="p-8 text-center">
-            <p className="text-zinc-500 text-sm">
+            <p className="text-text-muted text-sm">
               Nenhum exercício neste plano.
             </p>
           </Card>
         ) : (
-          exercises.map((exercise) => (
-            <Card key={exercise.id} className="p-4">
-              <div className="mb-3">
-                <h3 className="text-base font-semibold text-zinc-50">
-                  {exercise.name}
-                </h3>
-                <p className="text-xs text-zinc-500 mt-1">
-                  {exercise.sets} séries × {exercise.reps} reps · meta{" "}
-                  {exercise.currentWeight || "—"} kg
-                </p>
-              </div>
-              <Accordion title="Histórico">
-                <div className="space-y-2">
-                  {groupedHistoryByExercise[exercise.id]?.length > 0 ? (
-                    groupedHistoryByExercise[exercise.id].map((session) => {
-                      const prevSession =
-                        groupedHistoryByExercise[exercise.id][
-                          groupedHistoryByExercise[exercise.id].indexOf(
-                            session,
-                          ) + 1
-                        ];
-                      const isPR =
-                        !prevSession ||
-                        (session.bestWeight || 0) >
-                          (prevSession.bestWeight || 0) ||
-                        ((session.bestWeight || 0) ===
-                          (prevSession.bestWeight || 0) &&
-                          (session.bestReps || 0) >
-                            (prevSession.bestReps || 0));
-
-                      return (
-                        <div
-                          key={session.sessionId}
-                          className="flex justify-between gap-3 text-sm text-zinc-400"
-                        >
-                          <span>
-                            {logTime(session)
-                              ? new Date(logTime(session)).toLocaleDateString(
-                                  "pt-BR",
-                                  { day: "2-digit", month: "short" },
-                                )
-                              : "—"}
-                          </span>
-                          <span className="font-medium text-zinc-200 tabular-nums">
-                            {session.bestWeight != null
-                              ? `${session.bestWeight} kg`
-                              : "—"}{" "}
-                            × {session.bestReps || "—"}
-                            {isPR && (
-                              <span className="ml-2 text-amber-400">🔥</span>
-                            )}
-                          </span>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-zinc-500 text-sm">
-                      Sem registros ainda.
-                    </p>
-                  )}
+          exercises.map((exercise, index) => (
+            <motion.div
+              key={exercise.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: index * 0.05,
+                type: "spring",
+                stiffness: 400,
+                damping: 25,
+              }}
+            >
+              <Card className="p-4">
+                <div className="mb-3">
+                  <h3 className="text-base font-bold text-text-primary">
+                    {exercise.name}
+                  </h3>
+                  <p className="text-xs text-text-tertiary mt-1">
+                    {exercise.sets} séries × {exercise.reps} reps · meta{" "}
+                    {exercise.currentWeight || "—"} kg
+                  </p>
                 </div>
-              </Accordion>
-            </Card>
+                <Accordion title="Histórico">
+                  <div className="space-y-2">
+                    {groupedHistoryByExercise[exercise.id]?.length > 0 ? (
+                      groupedHistoryByExercise[exercise.id].map((session) => {
+                        const prevSession =
+                          groupedHistoryByExercise[exercise.id][
+                            groupedHistoryByExercise[exercise.id].indexOf(
+                              session,
+                            ) + 1
+                          ];
+                        const isPR =
+                          !prevSession ||
+                          (session.bestWeight || 0) >
+                            (prevSession.bestWeight || 0) ||
+                          ((session.bestWeight || 0) ===
+                            (prevSession.bestWeight || 0) &&
+                            (session.bestReps || 0) >
+                              (prevSession.bestReps || 0));
+
+                        return (
+                          <div
+                            key={session.sessionId}
+                            className="flex justify-between gap-3 text-sm text-text-tertiary"
+                          >
+                            <span>
+                              {logTime(session)
+                                ? new Date(logTime(session)).toLocaleDateString(
+                                    "pt-BR",
+                                    { day: "2-digit", month: "short" },
+                                  )
+                                : "—"}
+                            </span>
+                            <span className="font-bold text-text-secondary tabular-nums">
+                              {session.bestWeight != null
+                                ? `${session.bestWeight} kg`
+                                : "—"}{" "}
+                              × {session.bestReps || "—"}
+                              {isPR && (
+                                <span className="ml-2 text-accent">🔥</span>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-text-muted text-sm">
+                        Sem registros ainda.
+                      </p>
+                    )}
+                  </div>
+                </Accordion>
+              </Card>
+            </motion.div>
           ))
         )}
       </div>

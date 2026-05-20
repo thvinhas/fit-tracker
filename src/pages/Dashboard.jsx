@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { getWorkouts, getSessions } from "../services/firestore";
 import Container from "../components/Container";
@@ -83,9 +84,9 @@ const Dashboard = () => {
 
   if (authLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-3">
-        <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
-        <p className="text-sm text-zinc-500">Carregando…</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
+        <p className="text-sm text-text-muted font-medium">Carregando…</p>
       </div>
     );
   }
@@ -94,7 +95,7 @@ const Dashboard = () => {
     return (
       <Container title="Início" subtitle="Carregando seu espaço…">
         <div className="flex justify-center py-16">
-          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+          <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
         </div>
       </Container>
     );
@@ -102,42 +103,77 @@ const Dashboard = () => {
 
   return (
     <Container title="Início" subtitle="Foco no treino de hoje.">
-      <div className="flex gap-3 mb-8">
-        <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
-            Streak
-          </p>
-          <p className="text-2xl font-bold text-emerald-400 tabular-nums mt-0.5">
+      <div className="flex gap-3 mb-6">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="flex-1 rounded-2xl bg-surface3 border-border-subtle px-4 py-4 shadow-inner-glow"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <motion.span
+              animate={{ rotate: [0, -10, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              className="text-lg"
+            >
+              🔥
+            </motion.span>
+            <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold">
+              Streak
+            </p>
+          </div>
+          <p className="text-3xl font-black text-primary tabular-nums tracking-tight">
             {streak}
-            <span className="text-sm font-semibold text-zinc-500 ml-1">
-              dias
-            </span>
+            <span className="text-sm font-bold text-text-muted ml-1">dias</span>
           </p>
-        </div>
-        <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
-            7 dias
-          </p>
-          <p className="text-2xl font-bold text-zinc-50 tabular-nums mt-0.5">
+        </motion.div>
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+            delay: 0.1,
+          }}
+          className="flex-1 rounded-2xl bg-surface3 border-border-subtle px-4 py-4 shadow-inner-glow"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lg">💪</span>
+            <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold">
+              7 dias
+            </p>
+          </div>
+          <p className="text-3xl font-black text-text-primary tabular-nums tracking-tight">
             {weekCount}
-            <span className="text-sm font-semibold text-zinc-500 ml-1">
+            <span className="text-sm font-bold text-text-muted ml-1">
               sessões
             </span>
           </p>
-        </div>
+        </motion.div>
       </div>
 
       {workoutOfTheDay ? (
-        <div className="mb-10">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 0.2,
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+          }}
+          className="mb-6"
+        >
+          <p className="text-xs font-bold uppercase tracking-widest text-text-muted mb-3">
             Próximo treino
           </p>
           <Card highlighted className="p-5">
-            <h2 className="text-xl font-bold text-zinc-50 leading-tight">
+            <h2 className="text-2xl font-black text-text-primary leading-tight mb-2">
               {workoutOfTheDay.name}
             </h2>
-            <p className="text-sm text-zinc-400 mt-2 mb-6">
-              Veja os exercícios ou comece a sessão agora.
+            <p className="text-sm text-text-tertiary mb-5">
+              Pronto para começar? Vamos lá.
             </p>
             <Link
               to={`/workout/${workoutOfTheDay.id}/start`}
@@ -152,71 +188,101 @@ const Dashboard = () => {
               Ver plano
             </Link>
           </Card>
-        </div>
+        </motion.div>
       ) : (
-        <Card className="p-6 mb-10 border-amber-500/30 bg-amber-500/5">
-          <p className="text-sm text-amber-100/90 font-medium">
-            Crie um treino para começar a registrar progresso.
-          </p>
-          <Link to="/workouts/new" className={`${buttonPrimaryLinkClass} mt-4`}>
-            Criar treino
-          </Link>
-        </Card>
-      )}
-
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-500">
-          Seus planos
-        </h3>
-        <Link
-          to="/workouts"
-          className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 0.2,
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+          }}
+          className="mb-6"
         >
-          Gerenciar →
-        </Link>
-      </div>
-
-      {workouts.length === 0 ? (
-        <Card className="p-8 text-center">
-          <p className="text-zinc-500 text-sm mb-4">
-            Ainda sem treinos salvos.
-          </p>
-          <Link to="/workouts/new" className={buttonPrimaryLinkClass}>
-            Criar primeiro treino
-          </Link>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {workouts.map((workout) => {
-            const done = sessions.some(
-              (session) => session.workoutId === workout.id,
-            );
-            return (
-              <Link key={workout.id} to={`/workout/${workout.id}`}>
-                <Card className="p-4 flex items-center justify-between gap-3 active:scale-[0.99] transition-transform">
-                  <div className="min-w-0">
-                    <h4 className="text-base font-semibold text-zinc-100 truncate">
-                      {workout.name}
-                    </h4>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {done ? "Última sessão registada" : "Por fazer"}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${
-                      done
-                        ? "bg-emerald-500/15 text-emerald-400"
-                        : "bg-zinc-800 text-zinc-400"
-                    }`}
-                  >
-                    {done ? "Feito" : "Abrir"}
-                  </span>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+          <Card className="p-5 border-accent/30 bg-accent/5 shadow-glow-accent">
+            <p className="text-sm text-text-secondary font-bold mb-4">
+              Crie um treino para começar a registrar progresso.
+            </p>
+            <Link to="/workouts/new" className={`${buttonPrimaryLinkClass}`}>
+              Criar treino
+            </Link>
+          </Card>
+        </motion.div>
       )}
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, type: "spring", stiffness: 400, damping: 25 }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">
+            Seus planos
+          </h3>
+          <Link
+            to="/workouts"
+            className="text-xs font-bold text-primary hover:text-primaryGlow transition-colors"
+          >
+            Gerenciar →
+          </Link>
+        </div>
+
+        {workouts.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-text-muted text-sm mb-4">
+              Ainda sem treinos salvos.
+            </p>
+            <Link to="/workouts/new" className={buttonPrimaryLinkClass}>
+              Criar primeiro treino
+            </Link>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {workouts.map((workout, index) => {
+              const done = sessions.some(
+                (session) => session.workoutId === workout.id,
+              );
+              return (
+                <motion.div
+                  key={workout.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.4 + index * 0.05,
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 25,
+                  }}
+                >
+                  <Link to={`/workout/${workout.id}`}>
+                    <Card className="p-4 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform hover:bg-surface2">
+                      <div className="min-w-0">
+                        <h4 className="text-base font-bold text-text-primary truncate">
+                          {workout.name}
+                        </h4>
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {done ? "Última sessão registada" : "Por fazer"}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 text-[10px] font-bold uppercase px-3 py-1.5 rounded-full ${
+                          done
+                            ? "bg-primary/15 text-primary border border-primary/30"
+                            : "bg-surface2 text-text-muted border-border-subtle"
+                        }`}
+                      >
+                        {done ? "Feito" : "Abrir"}
+                      </span>
+                    </Card>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
     </Container>
   );
 };

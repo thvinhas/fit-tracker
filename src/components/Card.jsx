@@ -2,11 +2,11 @@ const Card = ({ children, className = "", highlighted = false }) => {
   return (
     <div
       className={`
-        rounded-2xl transition-all duration-200
+        rounded-2xl transition-all duration-300 relative overflow-hidden
         ${
           highlighted
-            ? "border border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_32px_-8px_rgba(52,211,153,0.25)]"
-            : "border border-white/10 bg-white/[0.03] hover:border-white/15"
+            ? "bg-surface3 border border-primary/30 shadow-glow-sm before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/10 before:to-transparent before:pointer-events-none"
+            : "bg-surface3 border-border-subtle hover:border-border-hover shadow-inner-glow"
         }
         ${className}
       `}

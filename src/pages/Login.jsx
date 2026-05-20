@@ -9,7 +9,12 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { user, loading: authLoading, loginWithEmail, loginWithGoogle } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    loginWithEmail,
+    loginWithGoogle,
+  } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,24 +54,28 @@ const Login = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen min-h-[100dvh] bg-zinc-950 flex items-center justify-center">
-        <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+      <div className="min-h-screen min-h-[100dvh] bg-background flex items-center justify-center">
+        <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-zinc-950 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen min-h-[100dvh] bg-background flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center mx-auto mb-4 shadow-[0_0_32px_-6px_rgba(52,211,153,0.45)]">
-            <span className="text-zinc-950 font-bold text-2xl">FT</span>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <span className="text-zinc-950 font-extrabold text-2xl">FT</span>
           </div>
-          <h1 className="text-3xl font-bold text-zinc-50 tracking-tight">Fit Tracker</h1>
-          <p className="text-zinc-500 mt-2 text-sm">Entre para continuar</p>
+          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">
+            Fit Tracker
+          </h1>
+          <p className="text-text-tertiary mt-2 text-sm font-medium">
+            Entre para continuar
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 space-y-6 shadow-2xl">
+        <div className="rounded-3xl border-border-subtle bg-gradient-surface p-8 space-y-6 shadow-surface-lg">
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <Input
               label="Email"
@@ -92,9 +101,9 @@ const Login = () => {
           </form>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs text-zinc-500">ou</span>
-            <div className="flex-1 h-px bg-white/10" />
+            <div className="flex-1 h-px bg-border-subtle" />
+            <span className="text-xs text-text-muted font-medium">ou</span>
+            <div className="flex-1 h-px bg-border-subtle" />
           </div>
 
           <Button
@@ -126,7 +135,7 @@ const Login = () => {
           </Button>
         </div>
 
-        <p className="text-center text-xs text-zinc-600 mt-6">
+        <p className="text-center text-xs text-text-muted mt-6">
           Credenciais do seu projeto Firebase
         </p>
       </div>

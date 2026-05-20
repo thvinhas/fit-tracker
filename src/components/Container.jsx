@@ -3,9 +3,13 @@ const Container = ({ children, title, subtitle, className = "" }) => {
     <div className={`w-full ${className}`}>
       {title && (
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-50">{title}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">
+            {title}
+          </h1>
           {subtitle && (
-            <p className="mt-1.5 text-sm text-zinc-400 leading-relaxed">{subtitle}</p>
+            <p className="mt-2 text-base text-text-tertiary leading-relaxed font-medium">
+              {subtitle}
+            </p>
           )}
         </div>
       )}

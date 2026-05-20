@@ -117,7 +117,7 @@ const WorkoutForm = () => {
     return (
       <Container>
         <div className="flex justify-center py-16">
-          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+          <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
         </div>
       </Container>
     );
@@ -127,7 +127,7 @@ const WorkoutForm = () => {
     return (
       <Container>
         <div className="flex justify-center py-16">
-          <div className="h-10 w-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
+          <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
         </div>
       </Container>
     );
@@ -155,7 +155,7 @@ const WorkoutForm = () => {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-extrabold text-text-primary mb-4">
             Exercícios
           </h3>
           <div className="space-y-6">

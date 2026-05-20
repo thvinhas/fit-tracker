@@ -1,8 +1,8 @@
 export const buttonPrimaryLinkClass =
-  "font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 shadow-[0_0_28px_-6px_rgba(52,211,153,0.55)] hover:from-emerald-400 hover:to-teal-400 px-5 py-3.5 text-base min-h-[52px] w-full";
+  "font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.96] bg-gradient-primary text-black shadow-glow hover:shadow-glow-lg hover:scale-[1.02] px-5 py-4 text-base min-h-[56px] w-full relative overflow-hidden group";
 
 export const buttonGhostLinkClass =
-  "font-semibold rounded-xl transition-all duration-200 inline-flex items-center justify-center gap-2 active:scale-[0.98] text-zinc-300 hover:bg-white/5 px-3 py-2 text-sm";
+  "font-bold rounded-xl transition-all duration-200 inline-flex items-center justify-center gap-2 active:scale-[0.96] text-text-tertiary hover:text-text-secondary hover:bg-white/5 px-3 py-2 text-sm";
 
 const Button = ({
   children,
@@ -14,21 +14,22 @@ const Button = ({
   ...props
 }) => {
   const baseClasses =
-    "font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100";
+    "font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.95] disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100 disabled:hover:scale-100 relative overflow-hidden";
 
   const variants = {
     primary:
-      "bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 shadow-[0_0_28px_-6px_rgba(52,211,153,0.55)] hover:from-emerald-400 hover:to-teal-400",
+      "bg-gradient-primary text-black shadow-glow hover:shadow-glow-lg hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity",
     secondary:
-      "bg-white/10 text-zinc-100 border border-white/10 hover:bg-white/[0.14]",
-    danger: "bg-red-500/90 text-white hover:bg-red-500",
-    ghost: "text-zinc-300 hover:bg-white/5",
+      "bg-surface3 text-text-primary border-border-subtle hover:bg-surface4 hover:border-border-hover shadow-inner-glow",
+    danger:
+      "bg-red-500/90 text-white hover:bg-red-500 shadow-lg hover:shadow-red-500/30",
+    ghost: "text-text-tertiary hover:text-text-secondary hover:bg-white/5",
   };
 
   const sizes = {
-    sm: "px-3 py-2 text-sm",
-    md: "px-4 py-2.5 text-sm",
-    lg: "px-5 py-3.5 text-base min-h-[52px] w-full",
+    sm: "px-4 py-2.5 text-sm rounded-xl",
+    md: "px-5 py-3 text-sm rounded-xl",
+    lg: "px-6 py-4 text-base min-h-[56px] w-full rounded-2xl",
   };
 
   return (
@@ -44,6 +45,6 @@ const Button = ({
 };
 
 export const buttonSecondaryLinkClass =
-  "font-semibold rounded-xl transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98] bg-white/10 text-zinc-100 border border-white/10 hover:bg-white/[0.14] px-3 py-2 text-sm w-full";
+  "font-bold rounded-xl transition-all duration-200 inline-flex items-center justify-center gap-2 active:scale-[0.96] bg-surface3 text-text-primary border-border-subtle hover:bg-surface4 hover:border-border-hover shadow-inner-glow px-4 py-3 text-sm w-full";
 
 export default Button;

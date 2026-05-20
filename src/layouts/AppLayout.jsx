@@ -9,10 +9,10 @@ const AppLayout = () => {
   const sessionMode = SESSION_PATH.test(pathname);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-zinc-950 text-zinc-100 flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] bg-background text-text-primary flex flex-col">
       {!sessionMode && <Header />}
       <main
-        className={`flex-1 w-full max-w-lg mx-auto px-4 ${sessionMode ? "pb-8 pt-2" : "pb-24 pt-2"}`}
+        className={`flex-1 w-full max-w-lg mx-auto px-4 ${sessionMode ? "pb-8 pt-4" : "pb-24 pt-4"}`}
       >
         <Outlet />
       </main>

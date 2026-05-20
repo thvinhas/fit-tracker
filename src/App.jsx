@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import WorkoutView from "./pages/WorkoutView";
 import WorkoutStart from "./pages/WorkoutStart";
+import WorkoutCompletion from "./pages/WorkoutCompletion";
 import Workouts from "./pages/Workouts";
 import WorkoutForm from "./pages/WorkoutForm";
 import Progress from "./pages/Progress";
@@ -18,7 +19,8 @@ function App() {
         position="top-center"
         toastOptions={{
           duration: 2800,
-          className: "!bg-zinc-900 !text-zinc-100 !border !border-white/10 !shadow-xl",
+          className:
+            "!bg-zinc-900 !text-zinc-100 !border !border-white/10 !shadow-xl",
         }}
       />
       <Routes>
@@ -36,6 +38,10 @@ function App() {
           <Route path="workouts/:id/edit" element={<WorkoutForm />} />
           <Route path="workout/:id" element={<WorkoutView />} />
           <Route path="workout/:id/start" element={<WorkoutStart />} />
+          <Route
+            path="workout/:id/completion"
+            element={<WorkoutCompletion />}
+          />
           <Route path="progress" element={<Progress />} />
           <Route path="profile" element={<Profile />} />
         </Route>

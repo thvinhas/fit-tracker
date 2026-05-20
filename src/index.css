@@ -5,8 +5,69 @@
 @layer base {
   html {
     color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
   body {
-    @apply antialiased bg-zinc-950 text-zinc-100;
+    @apply antialiased bg-background text-text-primary;
+    background: linear-gradient(180deg, #09090b 0%, #0a0a0f 100%);
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/20;
+  }
+
+  /* Remove tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-xl;
+  }
+
+  .glass-strong {
+    @apply bg-white/[0.06] backdrop-blur-2xl;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-primary bg-clip-text text-transparent;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 32px rgba(16, 185, 129, 0.4);
+  }
+
+  .surface-elevated {
+    @apply bg-surface2 shadow-surface;
+  }
+
+  .surface-card {
+    @apply bg-gradient-surface border-border-subtle;
   }
 }

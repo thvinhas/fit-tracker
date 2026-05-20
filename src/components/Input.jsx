@@ -2,20 +2,22 @@ const Input = ({ label, error, className = "", ...props }) => {
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wide">
+        <label className="block text-xs font-bold text-text-muted mb-2 uppercase tracking-wider">
           {label}
         </label>
       )}
       <input
         className={`
-          w-full px-4 py-3 rounded-xl border transition-all duration-200
-          bg-zinc-900/80 text-zinc-100 placeholder:text-zinc-600
-          focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
-          ${error ? "border-red-500/60" : "border-white/10 hover:border-white/20"}
+          w-full px-4 py-3.5 rounded-2xl border transition-all duration-300
+          bg-surface2 text-text-primary placeholder:text-text-muted
+          focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50
+          ${error ? "border-red-500/60 focus:ring-red-500/50" : "border-border-subtle hover:border-border-hover"}
         `}
         {...props}
       />
-      {error && <p className="mt-1.5 text-sm text-red-400">{error}</p>}
+      {error && (
+        <p className="mt-2 text-sm text-red-400 font-medium">{error}</p>
+      )}
     </div>
   );
 };
