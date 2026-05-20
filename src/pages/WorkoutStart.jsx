@@ -19,7 +19,7 @@ const REP_OPTIONS = [6, 8, 10, 12, 15];
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
 // Compact weight stepper - much smaller with premium motion
-const CompactWeightStepper = ({ value, onChange, disabled }) => (
+const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
   <div className="flex items-center gap-1">
     <motion.button
       type="button"
@@ -27,21 +27,23 @@ const CompactWeightStepper = ({ value, onChange, disabled }) => (
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value - 1, 0, 500))}
-      className="h-8 w-8 rounded-lg bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-11 w-11 rounded-[14px] bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Diminuir peso"
     >
       −
     </motion.button>
-    <div className="min-w-[3.5rem] text-center px-1">
+    <div className="min-w-[4rem] text-center px-1">
       <motion.span
         key={value}
         initial={{ scale: 1.2, opacity: 0.5 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="text-lg font-bold tabular-nums text-text-primary"
+        className="text-[28px] font-bold tabular-nums text-text-primary leading-none"
       >
         {value}
       </motion.span>
-      <span className="text-xs font-semibold text-text-muted ml-0.5">kg</span>
+      <span className="text-[16px] font-semibold text-text-muted ml-0.5 opacity-70">
+        {label}
+      </span>
     </div>
     <motion.button
       type="button"
@@ -49,7 +51,7 @@ const CompactWeightStepper = ({ value, onChange, disabled }) => (
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value + 1, 0, 500))}
-      className="h-8 w-8 rounded-lg bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-11 w-11 rounded-[14px] bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Aumentar peso"
     >
       +
@@ -552,9 +554,14 @@ const WorkoutStart = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-text-primary truncate">
-                          {exercise.name}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-text-primary truncate">
+                            {exercise.name}
+                          </h3>
+                          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                            {exercise.reps || 10} reps
+                          </span>
+                        </div>
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="text-[11px] text-text-tertiary">
                             {completedSets}/{totalExerciseSets} sets
@@ -569,7 +576,7 @@ const WorkoutStart = () => {
                       <motion.div
                         animate={{ rotate: isExpanded ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
-                        className="w-6 h-6 rounded-full bg-surface4 flex items-center justify-center"
+                        className="w-9 h-9 rounded-full bg-white/6 flex items-center justify-center"
                       >
                         <svg
                           className="w-3 h-3 text-text-muted"
@@ -621,10 +628,10 @@ const WorkoutStart = () => {
                               >
                                 {/* Compact Set Row */}
                                 <div
-                                  className={`flex items-center gap-2 p-2 ${setActive ? "bg-gradient-to-r from-primary/5 to-transparent" : ""}`}
+                                  className={`flex items-center gap-2 p-3 min-h-[72px] ${setActive ? "bg-gradient-to-r from-primary/5 to-transparent" : ""}`}
                                 >
                                   {/* Set Number & Check */}
-                                  <div className="flex items-center gap-2 min-w-[3.5rem]">
+                                  <div className="flex items-center gap-2 min-w-[4rem]">
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                                       {setIndex + 1}
                                     </span>
@@ -640,7 +647,7 @@ const WorkoutStart = () => {
                                           setActiveSetId(setKey);
                                         }
                                       }}
-                                      className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-all duration-200 ${
+                                      className={`flex h-11 w-11 items-center justify-center rounded-[14px] border transition-all duration-200 ${
                                         row.completed
                                           ? "border-primary bg-primary text-black shadow-glow-sm"
                                           : setActive
@@ -668,7 +675,7 @@ const WorkoutStart = () => {
                                               stiffness: 400,
                                               damping: 20,
                                             }}
-                                            className="h-3.5 w-3.5"
+                                            className="h-[14px] w-[14px]"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             stroke="currentColor"
@@ -691,7 +698,7 @@ const WorkoutStart = () => {
                                               stiffness: 400,
                                               damping: 25,
                                             }}
-                                            className="h-1.5 w-1.5 rounded-full bg-text-muted"
+                                            className="h-[14px] w-[14px] rounded-full bg-text-muted"
                                           />
                                         )}
                                       </AnimatePresence>
@@ -711,70 +718,6 @@ const WorkoutStart = () => {
                                       }
                                       disabled={row.completed}
                                     />
-                                  </div>
-
-                                  {/* Reps - Compact display or expanded controls */}
-                                  <div
-                                    className={`relative ${row.completed ? "opacity-40 pointer-events-none" : ""}`}
-                                  >
-                                    {setActive ? (
-                                      <div className="flex items-center gap-1">
-                                        <CompactWeightStepper
-                                          value={Number(row.reps) || 0}
-                                          onChange={(r) =>
-                                            updateSet(exercise.id, setIndex, {
-                                              reps: r,
-                                            })
-                                          }
-                                          disabled={row.completed}
-                                        />
-                                        <motion.button
-                                          type="button"
-                                          whileTap={{ scale: 0.9 }}
-                                          whileHover={{ scale: 1.05 }}
-                                          onClick={(e) =>
-                                            handleRepSelectorOpen(
-                                              e,
-                                              exercise.id,
-                                              setIndex,
-                                            )
-                                          }
-                                          className="h-8 w-8 rounded-lg bg-surface2 border border-border-subtle text-xs font-bold text-text-tertiary hover:bg-surface3 hover:border-border-hover transition-all"
-                                        >
-                                          ...
-                                        </motion.button>
-                                      </div>
-                                    ) : (
-                                      <motion.button
-                                        type="button"
-                                        whileTap={{ scale: 0.95 }}
-                                        whileHover={{ scale: 1.02 }}
-                                        onClick={() => setActiveSetId(setKey)}
-                                        className="h-8 px-3 rounded-lg bg-surface2 border border-border-subtle text-sm font-bold tabular-nums text-text-tertiary hover:bg-surface3 hover:border-border-hover hover:text-text-secondary transition-all"
-                                      >
-                                        {row.reps} reps
-                                      </motion.button>
-                                    )}
-
-                                    {/* Rep Selector Popover */}
-                                    <AnimatePresence>
-                                      {repSelectorOpen === setKey && (
-                                        <div
-                                          className="absolute right-0 top-full mt-2 z-50"
-                                          ref={repSelectorRef}
-                                        >
-                                          <RepSelector
-                                            value={Number(row.reps) || 0}
-                                            onChange={(reps) =>
-                                              updateSet(exercise.id, setIndex, {
-                                                reps,
-                                              })
-                                            }
-                                            onClose={handleRepSelectorClose}
-                                          />
-                                        </div>
-                                      )}
-                                    </AnimatePresence>
                                   </div>
                                 </div>
                               </motion.div>

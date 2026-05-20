@@ -92,11 +92,11 @@ export default {
       },
       boxShadow: {
         // Premium glow effects
-        "glow-xs": "0 0 12px -2px rgba(0, 255, 136, 0.25)",
-        "glow-sm": "0 0 20px -4px rgba(0, 255, 136, 0.35)",
-        glow: "0 0 32px -8px rgba(0, 255, 136, 0.4)",
-        "glow-lg": "0 0 48px -12px rgba(0, 255, 136, 0.5)",
-        "glow-xl": "0 0 64px -16px rgba(0, 255, 136, 0.6)",
+        "glow-xs": "0 0 12px rgba(0, 255, 120, 0.25)",
+        "glow-sm": "0 0 12px rgba(0, 255, 120, 0.25)",
+        glow: "0 0 32px -8px rgba(0, 255, 120, 0.3)",
+        "glow-lg": "0 0 48px -12px rgba(0, 255, 120, 0.35)",
+        "glow-xl": "0 0 64px -16px rgba(0, 255, 120, 0.4)",
         "glow-accent": "0 0 24px -6px rgba(255, 107, 53, 0.5)",
         "glow-accent-lg": "0 0 40px -10px rgba(255, 107, 53, 0.6)",
         "inner-glow": "inset 0 1px 0 0 rgba(255, 255, 255, 0.06)",

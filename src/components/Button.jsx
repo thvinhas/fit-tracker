@@ -29,7 +29,7 @@ const Button = ({
   const sizes = {
     sm: "px-4 py-2.5 text-sm rounded-xl",
     md: "px-5 py-3 text-sm rounded-xl",
-    lg: "px-6 py-4 text-base min-h-[56px] w-full rounded-2xl",
+    lg: "px-6 py-4 text-[22px] font-bold min-h-[64px] w-full rounded-2xl",
   };
 
   return (
