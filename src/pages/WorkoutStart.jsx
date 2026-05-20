@@ -561,6 +561,11 @@ const WorkoutStart = () => {
                           <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                             {exercise.reps || 10} reps
                           </span>
+                          {exercise.device && (
+                            <span className="text-[11px] font-semibold text-text-tertiary bg-surface3 px-2 py-0.5 rounded-full">
+                              {exercise.device}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="text-[11px] text-text-tertiary">
