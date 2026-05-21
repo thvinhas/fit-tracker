@@ -1,18 +1,24 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { registerSW } from "virtual:pwa-register";
 import "./index.css";
 import App from "./App.jsx";
-import { registerSW } from "virtual:pwa-register";
 
-// Register service worker with update handling
 const updateSW = registerSW({
+  immediate: true,
+
   onNeedRefresh() {
-    if (confirm("New content available. Reload?")) {
+    const shouldUpdate = window.confirm(
+      "Nova versão disponível. Atualizar agora?",
+    );
+
+    if (shouldUpdate) {
       updateSW(true);
     }
   },
+
   onOfflineReady() {
-    console.log("App is ready to work offline");
+    console.log("App pronto para uso offline");
   },
 });
 

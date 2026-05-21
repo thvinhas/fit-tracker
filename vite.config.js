@@ -8,6 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "auto",
       includeAssets: ["favicon.svg", "icons/*.png", "icons/*.svg"],
       manifest: {
         name: "Fit Tracker",
