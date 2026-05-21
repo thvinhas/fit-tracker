@@ -12,7 +12,6 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import Button, { buttonGhostLinkClass } from "../components/Button";
-import RestTimer from "../components/RestTimer";
 
 const REP_OPTIONS = [6, 8, 10, 12, 15];
 
@@ -111,9 +110,10 @@ const WorkoutStart = () => {
   const [repSelectorOpen, setRepSelectorOpen] = useState(null);
   const [repSelectorPosition, setRepSelectorPosition] = useState(null);
   const repSelectorRef = useRef(null);
-  const [restTimerActive, setRestTimerActive] = useState(false);
-  const [restTimerDuration, setRestTimerDuration] = useState(90);
+  // const [restTimerActive, setRestTimerActive] = useState(false);
+  // const [restTimerDuration, setRestTimerDuration] = useState(90);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -193,8 +193,8 @@ const WorkoutStart = () => {
               }
 
               // Auto-start rest timer
-              setRestTimerActive(true);
-              setRestTimerDuration(90);
+              // setRestTimerActive(true);
+              // setRestTimerDuration(90);
 
               // Auto-advance to next incomplete set
               const nextSetIndex = exerciseSets.findIndex(
@@ -236,7 +236,19 @@ const WorkoutStart = () => {
   );
 
   const handleFinishWorkout = async () => {
+    // Check if all exercises are completed
+    if (completedCount < totalSets) {
+      setShowFinishConfirm(true);
+      return;
+    }
+
+    // All exercises completed, proceed directly
+    await finishWorkout();
+  };
+
+  const finishWorkout = async () => {
     setIsFinishing(true);
+    setShowFinishConfirm(false);
     try {
       const sessionEndTime = Date.now();
       const duration = sessionEndTime - sessionStartTime;
@@ -359,6 +371,16 @@ const WorkoutStart = () => {
     );
   }, [exercises, setStates]);
 
+  const completedExercises = useMemo(() => {
+    return exercises.reduce((acc, ex) => {
+      const rows = setStates[ex.id] || [];
+      const isComplete = rows.length > 0 && rows.every((r) => r.completed);
+      return acc + (isComplete ? 1 : 0);
+    }, 0);
+  }, [exercises, setStates]);
+
+  const totalExercises = exercises.length;
+
   const handleExerciseClick = (exerciseId) => {
     setExpandedExerciseId(
       expandedExerciseId === exerciseId ? null : exerciseId,
@@ -416,13 +438,13 @@ const WorkoutStart = () => {
     return null;
   };
 
-  const handleRestTimerComplete = () => {
-    setRestTimerActive(false);
-    const nextExerciseId = getNextIncompleteExercise();
-    if (nextExerciseId) {
-      setExpandedExerciseId(nextExerciseId);
-    }
-  };
+  // const handleRestTimerComplete = () => {
+  //   setRestTimerActive(false);
+  //   const nextExerciseId = getNextIncompleteExercise();
+  //   if (nextExerciseId) {
+  //     setExpandedExerciseId(nextExerciseId);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -440,12 +462,12 @@ const WorkoutStart = () => {
 
   return (
     <div className="pb-24 min-h-screen bg-background">
-      <RestTimer
+      {/* <RestTimer
         isActive={restTimerActive}
         duration={restTimerDuration}
         onComplete={handleRestTimerComplete}
         onDismiss={() => setRestTimerActive(false)}
-      />
+      /> */}
 
       <AnimatePresence>
         {prAlert && (
@@ -497,7 +519,7 @@ const WorkoutStart = () => {
                 Progresso
               </p>
               <p className="text-lg font-black text-primary tabular-nums tracking-tight">
-                {completedCount}/{totalSets}
+                {completedExercises}/{totalExercises}
               </p>
             </div>
           </div>
@@ -542,7 +564,7 @@ const WorkoutStart = () => {
                     isExpanded
                       ? "bg-surface3 border-primary/40 shadow-glow-sm"
                       : isComplete
-                        ? "bg-surface2 border-border-subtle opacity-60"
+                        ? "bg-primary/5 border-primary/30"
                         : "bg-surface2 border-border-subtle hover:border-border-hover"
                   }`}
                 >
@@ -554,21 +576,35 @@ const WorkoutStart = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-text-primary truncate">
+                        <div className="flex items-center gap-3">
+                          {/* Equipment and Number - Left Corner (#2 highlighted) */}
+                          <div className="flex items-center gap-1.5">
+                            {exercise.device && (
+                              <span className="text-[12px] font-bold text-primary bg-primary/20 px-2.5 py-0.5 rounded-full border border-primary/30">
+                                {exercise.device}
+                              </span>
+                            )}
+                          </div>
+                          {/* Exercise Name - (#1 highlighted) */}
+                          <h3
+                            className={`text-sm font-bold truncate ${
+                              isComplete ? "text-primary" : "text-text-primary"
+                            }`}
+                          >
                             {exercise.name}
                           </h3>
-                          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                            {exercise.reps || 10} reps
-                          </span>
-                          {exercise.device && (
-                            <span className="text-[11px] font-semibold text-text-tertiary bg-surface3 px-2 py-0.5 rounded-full">
-                              {exercise.device}
+                          {isComplete && (
+                            <span className="text-[10px] font-semibold text-primary bg-primary/20 px-2 py-0.5 rounded-full">
+                              Concluído
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-[11px] text-text-tertiary">
+                          <p
+                            className={`text-[11px] ${
+                              isComplete ? "text-primary" : "text-text-tertiary"
+                            }`}
+                          >
                             {completedSets}/{totalExerciseSets} sets
                           </p>
                           {lastLabel && (
@@ -578,25 +614,48 @@ const WorkoutStart = () => {
                           )}
                         </div>
                       </div>
-                      <motion.div
-                        animate={{ rotate: isExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="w-9 h-9 rounded-full bg-white/6 flex items-center justify-center"
-                      >
-                        <svg
-                          className="w-3 h-3 text-text-muted"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                      <div className="flex items-center gap-2">
+                        {isComplete && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={3}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </motion.div>
+                        )}
+                        <motion.div
+                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="w-9 h-9 rounded-full bg-white/6 flex items-center justify-center"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </motion.div>
+                          <svg
+                            className="w-3 h-3 text-text-muted"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </motion.div>
+                      </div>
                     </div>
                   </button>
 
@@ -724,6 +783,28 @@ const WorkoutStart = () => {
                                       disabled={row.completed}
                                     />
                                   </div>
+
+                                  {/* Repetition Count - Visual Display */}
+                                  <div className="flex items-center gap-1 min-w-[5rem]">
+                                    <span
+                                      className={`text-lg font-bold tabular-nums ${
+                                        row.completed
+                                          ? "text-primary"
+                                          : "text-text-primary"
+                                      }`}
+                                    >
+                                      {row.reps}
+                                    </span>
+                                    <span
+                                      className={`text-xs font-medium ${
+                                        row.completed
+                                          ? "text-primary"
+                                          : "text-text-muted"
+                                      }`}
+                                    >
+                                      repetições
+                                    </span>
+                                  </div>
                                 </div>
                               </motion.div>
                             );
@@ -751,6 +832,48 @@ const WorkoutStart = () => {
           )}
         </Button>
       </div>
+
+      <AnimatePresence>
+        {showFinishConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowFinishConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="bg-surface2 border border-border-subtle rounded-2xl p-5 max-w-sm w-full shadow-surface-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-text-primary mb-2">
+                Finalizar treino incompleto?
+              </h3>
+              <p className="text-sm text-text-secondary mb-5">
+                Você completou {completedCount} de {totalSets} séries. Deseja
+                finalizar mesmo assim?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="flex-1"
+                  onClick={() => setShowFinishConfirm(false)}
+                >
+                  Continuar treino
+                </Button>
+                <Button size="md" className="flex-1" onClick={finishWorkout}>
+                  Finalizar
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
