@@ -24,7 +24,8 @@ const WorkoutView = () => {
   const [exerciseLogs, setExerciseLogs] = useState({});
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { saveWorkout, getWorkout, isOnline } = useOfflineStorage();
+  const { saveWorkout, getWorkout, isOnline, getExercisesWithCache } =
+    useOfflineStorage();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,7 +33,7 @@ const WorkoutView = () => {
         // Try to get from offline storage first
         const offlineWorkout = await getWorkout(id);
 
-        const exercisesData = await getExercises(id);
+        const exercisesData = await getExercisesWithCache(id);
         const logsPromises = exercisesData.map(async (exercise) => {
           const logs = await getExerciseLogs(exercise.id);
           return { exerciseId: exercise.id, logs };
@@ -55,7 +56,7 @@ const WorkoutView = () => {
       }
     };
     fetchData();
-  }, [id, saveWorkout, getWorkout]);
+  }, [id, saveWorkout, getWorkout, getExercisesWithCache]);
 
   const groupedHistoryByExercise = useMemo(() => {
     const grouped = {};

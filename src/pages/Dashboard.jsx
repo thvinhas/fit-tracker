@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
-import { getWorkouts, getSessions } from "../services/firestore";
+import { getSessions } from "../services/firestore";
+import { useOfflineStorage } from "../hooks/useOfflineStorage";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import {
@@ -48,6 +49,7 @@ const sessionsThisWeek = (logs) => {
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
+  const { getWorkoutsWithCache } = useOfflineStorage();
   const [workouts, setWorkouts] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +59,7 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         console.log("Carregando dados para userId:", user.uid);
-        const workoutsData = await getWorkouts(user.uid);
+        const workoutsData = await getWorkoutsWithCache(user.uid);
         console.log("Workouts carregados:", workoutsData);
         const sessionsData = await getSessions(user.uid);
         console.log("Sessions carregados:", sessionsData);
@@ -70,7 +72,7 @@ const Dashboard = () => {
       }
     };
     fetchData();
-  }, [user, location]);
+  }, [user, location, getWorkoutsWithCache]);
 
   const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;
