@@ -58,7 +58,10 @@ const Workouts = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
-        <Link to="/workouts/new" className={`${buttonPrimaryLinkClass} mb-8`}>
+        <Link
+          to="/workouts/new"
+          className={`${buttonPrimaryLinkClass} mb-6 sm:mb-8`}
+        >
           Novo treino
         </Link>
       </motion.div>
@@ -68,7 +71,7 @@ const Workouts = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, type: "spring", stiffness: 400, damping: 25 }}
       >
-        <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">
+        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-text-muted mb-3 sm:mb-4">
           Biblioteca
         </h3>
       </motion.div>
@@ -88,7 +91,7 @@ const Workouts = () => {
             damping: 25,
           }}
         >
-          <Card className="p-8 text-center">
+          <Card className="p-6 sm:p-8 text-center">
             <p className="text-text-muted text-sm mb-4">Nenhum treino ainda.</p>
             <Link to="/workouts/new" className={buttonPrimaryLinkClass}>
               Criar treino
@@ -96,7 +99,7 @@ const Workouts = () => {
           </Card>
         </motion.div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5 sm:gap-2">
           {workouts.map((workout, index) => (
             <motion.div
               key={workout.id}
@@ -109,11 +112,11 @@ const Workouts = () => {
                 damping: 25,
               }}
             >
-              <Card className="p-4">
-                <h4 className="text-base font-bold text-text-primary mb-4">
+              <Card className="p-3 sm:p-4">
+                <h4 className="text-sm sm:text-base font-bold text-text-primary mb-3 sm:mb-4">
                   {workout.name}
                 </h4>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 sm:gap-2">
                   <Link
                     to={`/workout/${workout.id}`}
                     className={`${buttonSecondaryLinkClass} flex-1`}
