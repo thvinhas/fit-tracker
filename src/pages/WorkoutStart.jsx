@@ -912,8 +912,8 @@ const WorkoutStart = () => {
                 Finalizar treino incompleto?
               </h3>
               <p className="text-sm text-text-secondary mb-4 sm:mb-5">
-                Você completou {completedCount} de {totalSets} séries. Deseja
-                finalizar mesmo assim?
+                Você completou {completedExercises} de {totalExercises}{" "}
+                exercícios. Deseja finalizar mesmo assim?
               </p>
               <div className="flex gap-3">
                 <Button
