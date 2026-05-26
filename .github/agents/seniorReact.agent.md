@@ -82,6 +82,7 @@ When responding:
 1. Brief explanation of UI/UX decisions
 2. Full implementation code
 3. UX/UI improvements or alternatives
+4. Always response in markdown format with code blocks for implementation
 
 ---
 
