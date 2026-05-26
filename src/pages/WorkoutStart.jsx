@@ -18,30 +18,30 @@ const REP_OPTIONS = [6, 8, 10, 12, 15];
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
-// Compact weight stepper - responsive sizes for different screens
+// Compact weight stepper - much smaller with premium motion
 const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
-  <div className="flex items-center gap-0.5 sm:gap-1">
+  <div className="flex items-center gap-1">
     <motion.button
       type="button"
       disabled={disabled}
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value - 1, 0, 500))}
-      className="h-9 w-9 sm:h-11 sm:w-11 rounded-[12px] sm:rounded-[14px] bg-surface2 border border-border-subtle text-xs sm:text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-11 w-11 rounded-[14px] bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Diminuir peso"
     >
       −
     </motion.button>
-    <div className="min-w-[3rem] sm:min-w-[4rem] text-center px-0.5 sm:px-1">
+    <div className="min-w-[4rem] text-center px-1">
       <motion.span
         key={value}
         initial={{ scale: 1.2, opacity: 0.5 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="text-[22px] sm:text-[28px] font-bold tabular-nums text-text-primary leading-none"
+        className="text-[28px] font-bold tabular-nums text-text-primary leading-none"
       >
         {value}
       </motion.span>
-      <span className="text-[10px] sm:text-[12px] font-semibold text-text-muted ml-0.5 opacity-70">
+      <span className="text-[16px] font-semibold text-text-muted ml-0.5 opacity-70">
         {label}
       </span>
     </div>
@@ -51,7 +51,7 @@ const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value + 1, 0, 500))}
-      className="h-9 w-9 sm:h-11 sm:w-11 rounded-[12px] sm:rounded-[14px] bg-surface2 border border-border-subtle text-xs sm:text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-11 w-11 rounded-[14px] bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Aumentar peso"
     >
       +
@@ -555,32 +555,32 @@ const WorkoutStart = () => {
         )}
       </AnimatePresence>
 
-      <div className="px-3 sm:px-4 pt-2 sm:pt-3 pb-1.5 sm:pb-2">
-        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center justify-between mb-2">
           <Link to={`/workout/${id}`} className={buttonGhostLinkClass}>
             ← Voltar
           </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-text-muted font-bold">
+              <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold">
                 Progresso
               </p>
-              <p className="text-base sm:text-lg font-black text-primary tabular-nums tracking-tight">
+              <p className="text-lg font-black text-primary tabular-nums tracking-tight">
                 {completedExercises}/{totalExercises}
               </p>
             </div>
           </div>
         </div>
 
-        <h1 className="text-lg sm:text-xl font-black text-text-primary tracking-tight mb-0.5 sm:mb-1">
+        <h1 className="text-xl font-black text-text-primary tracking-tight mb-1">
           Sessão ativa
         </h1>
-        <p className="text-[11px] sm:text-xs text-text-tertiary">
+        <p className="text-xs text-text-tertiary">
           Foco. Intensidade. Progresso.
         </p>
       </div>
 
-      <div className="px-3 sm:px-4 space-y-1.5 sm:space-y-2">
+      <div className="px-4 space-y-2">
         {exercises.length === 0 ? (
           <p className="text-center text-text-muted py-12 text-sm">
             Nenhum exercício neste treino.
@@ -619,57 +619,57 @@ const WorkoutStart = () => {
                   <button
                     type="button"
                     onClick={() => handleExerciseClick(exercise.id)}
-                    className="w-full p-2 sm:p-3 text-left"
+                    className="w-full p-3 text-left"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-3">
                           {/* Equipment and Number - Left Corner (#2 highlighted) */}
                           <div className="flex items-center gap-1.5">
                             {exercise.device && (
-                              <span className="text-[10px] sm:text-[12px] font-bold text-primary bg-primary/20 px-2 sm:px-2.5 py-0.5 rounded-full border border-primary/30">
+                              <span className="text-[12px] font-bold text-primary bg-primary/20 px-2.5 py-0.5 rounded-full border border-primary/30">
                                 {exercise.device}
                               </span>
                             )}
                           </div>
                           {/* Exercise Name - (#1 highlighted) */}
                           <h3
-                            className={`text-xs sm:text-sm font-bold truncate ${
+                            className={`text-sm font-bold truncate ${
                               isComplete ? "text-primary" : "text-text-primary"
                             }`}
                           >
                             {exercise.name}
                           </h3>
                           {isComplete && (
-                            <span className="text-[9px] sm:text-[10px] font-semibold text-primary bg-primary/20 px-1.5 sm:px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-semibold text-primary bg-primary/20 px-2 py-0.5 rounded-full">
                               Concluído
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
+                        <div className="flex items-center gap-2 mt-0.5">
                           <p
-                            className={`text-[10px] sm:text-[11px] ${
+                            className={`text-[11px] ${
                               isComplete ? "text-primary" : "text-text-tertiary"
                             }`}
                           >
                             {completedSets}/{totalExerciseSets} sets
                           </p>
                           {lastLabel && (
-                            <span className="text-[10px] sm:text-[11px] text-text-muted">
+                            <span className="text-[11px] text-text-muted">
                               • {lastLabel}
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="flex items-center gap-2">
                         {isComplete && (
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-black flex items-center justify-center"
+                            className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center"
                           >
                             <svg
-                              className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                              className="w-4 h-4"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -686,10 +686,10 @@ const WorkoutStart = () => {
                         <motion.div
                           animate={{ rotate: isExpanded ? 180 : 0 }}
                           transition={{ duration: 0.2 }}
-                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/6 flex items-center justify-center"
+                          className="w-9 h-9 rounded-full bg-white/6 flex items-center justify-center"
                         >
                           <svg
-                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-text-muted"
+                            className="w-3 h-3 text-text-muted"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -716,7 +716,7 @@ const WorkoutStart = () => {
                         transition={{ duration: 0.2, ease: "easeInOut" }}
                         className="border-t border-border-subtle"
                       >
-                        <div className="p-1.5 sm:p-2 space-y-1">
+                        <div className="p-2 space-y-1">
                           {rows.map((row, setIndex) => {
                             const setActive =
                               activeSetId === `${exercise.id}-${setIndex}`;
@@ -739,11 +739,11 @@ const WorkoutStart = () => {
                               >
                                 {/* Compact Set Row */}
                                 <div
-                                  className={`flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 min-h-[60px] sm:min-h-[72px] ${setActive ? "bg-gradient-to-r from-primary/5 to-transparent" : ""}`}
+                                  className={`flex items-center gap-2 p-3 min-h-[72px] ${setActive ? "bg-gradient-to-r from-primary/5 to-transparent" : ""}`}
                                 >
                                   {/* Set Number & Check */}
-                                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-[3rem] sm:min-w-[4rem]">
-                                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                                  <div className="flex items-center gap-2 min-w-[4rem]">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                                       {setIndex + 1}
                                     </span>
                                     <motion.button
@@ -758,7 +758,7 @@ const WorkoutStart = () => {
                                           setActiveSetId(setKey);
                                         }
                                       }}
-                                      className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-[12px] sm:rounded-[14px] border transition-all duration-200 ${
+                                      className={`flex h-11 w-11 items-center justify-center rounded-[14px] border transition-all duration-200 ${
                                         row.completed
                                           ? "border-primary bg-primary text-black shadow-glow-sm"
                                           : setActive
@@ -832,35 +832,24 @@ const WorkoutStart = () => {
                                   </div>
 
                                   {/* Repetition Count - Visual Display */}
-                                  <div className="flex flex-col items-center min-w-[4rem] sm:min-w-[5rem]">
-                                    <div className="flex items-center">
-                                      <span
-                                        className={`text-base sm:text-lg font-bold tabular-nums ${
-                                          row.completed
-                                            ? "text-primary"
-                                            : "text-text-primary"
-                                        }`}
-                                      >
-                                        x
-                                      </span>
-                                      <span
-                                        className={`text-base sm:text-lg font-bold tabular-nums ${
-                                          row.completed
-                                            ? "text-primary"
-                                            : "text-text-primary"
-                                        }`}
-                                      >
-                                        {row.reps}
-                                      </span>
-                                    </div>
+                                  <div className="flex items-center gap-1 min-w-[5rem]">
                                     <span
-                                      className={`text-[10px] sm:text-xs font-medium ${
+                                      className={`text-lg font-bold tabular-nums ${
+                                        row.completed
+                                          ? "text-primary"
+                                          : "text-text-primary"
+                                      }`}
+                                    >
+                                      {row.reps}
+                                    </span>
+                                    <span
+                                      className={`text-xs font-medium ${
                                         row.completed
                                           ? "text-primary"
                                           : "text-text-muted"
                                       }`}
                                     >
-                                      reps
+                                      repetições
                                     </span>
                                   </div>
                                 </div>
@@ -878,7 +867,7 @@ const WorkoutStart = () => {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-2 sm:p-3 bg-gradient-to-t from-background via-background to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background via-background to-transparent">
         <Button size="lg" onClick={handleFinishWorkout} disabled={isFinishing}>
           {isFinishing ? (
             <span className="flex items-center gap-2">
@@ -905,10 +894,10 @@ const WorkoutStart = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="bg-surface2 border border-border-subtle rounded-2xl p-4 sm:p-5 max-w-sm w-full shadow-surface-xl"
+              className="bg-surface2 border border-border-subtle rounded-2xl p-5 max-w-sm w-full shadow-surface-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-base sm:text-lg font-bold text-text-primary mb-2">
+              <h3 className="text-lg font-bold text-text-primary mb-2">
                 Finalizar treino incompleto?
               </h3>
               <p className="text-sm text-text-secondary mb-4 sm:mb-5">
