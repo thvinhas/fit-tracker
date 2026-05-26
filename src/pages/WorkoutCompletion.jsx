@@ -17,12 +17,12 @@ const WorkoutCompletion = () => {
   useEffect(() => {
     const loadSessionData = async () => {
       if (!user) return;
-      
+
       try {
         const sessions = await getSessions(user.uid);
         // Get the most recent session
         const recentSession = sessions[0];
-        
+
         if (recentSession) {
           setSessionData(recentSession);
         }
@@ -39,7 +39,7 @@ const WorkoutCompletion = () => {
   const formatDuration = (ms) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const formatVolume = (volume) => {
@@ -69,7 +69,12 @@ const WorkoutCompletion = () => {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 400, damping: 25 }}
+          transition={{
+            delay: 0.2,
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+          }}
           className="text-center mb-8"
         >
           <div className="text-6xl mb-4">🎉</div>
@@ -86,7 +91,12 @@ const WorkoutCompletion = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 400, damping: 25 }}
+            transition={{
+              delay: 0.3,
+              type: "spring",
+              stiffness: 400,
+              damping: 25,
+            }}
             className="grid grid-cols-2 gap-3 mb-6"
           >
             <Card className="p-4">
@@ -103,7 +113,9 @@ const WorkoutCompletion = () => {
               </p>
               <p className="text-2xl font-black text-text-primary tabular-nums">
                 {formatVolume(sessionData.totalVolume || 0)}
-                <span className="text-sm font-bold text-text-muted ml-1">kg</span>
+                <span className="text-sm font-bold text-text-muted ml-1">
+                  kg
+                </span>
               </p>
             </Card>
             <Card className="p-4">
@@ -119,7 +131,7 @@ const WorkoutCompletion = () => {
                 Séries
               </p>
               <p className="text-2xl font-black text-text-primary tabular-nums">
-                {sessionData.setCount || 0}
+                {sessionData.exerciseCount || 0}
               </p>
             </Card>
           </motion.div>
@@ -129,7 +141,12 @@ const WorkoutCompletion = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 25 }}
+          transition={{
+            delay: 0.4,
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+          }}
           className="mb-6"
         >
           <Card className="p-5 border-accent/30 bg-accent/5 shadow-glow-accent">
@@ -137,7 +154,12 @@ const WorkoutCompletion = () => {
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 25 }}
+                transition={{
+                  delay: 0.5,
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25,
+                }}
                 className="text-4xl"
               >
                 🔥
@@ -158,7 +180,12 @@ const WorkoutCompletion = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 25 }}
+          transition={{
+            delay: 0.5,
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+          }}
           className="mb-8"
         >
           <Card className="p-5 text-center">
@@ -172,15 +199,20 @@ const WorkoutCompletion = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, type: "spring", stiffness: 400, damping: 25 }}
+          transition={{
+            delay: 0.6,
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+          }}
           className="space-y-3"
         >
           <Button size="lg" onClick={() => navigate("/")}>
             Voltar ao Início
           </Button>
-          <Button 
-            variant="secondary" 
-            size="lg" 
+          <Button
+            variant="secondary"
+            size="lg"
             onClick={() => navigate("/progress")}
           >
             Ver Progresso
