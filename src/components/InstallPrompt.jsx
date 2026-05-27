@@ -19,12 +19,18 @@ export default function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", handler);
 
     // Check if user has dismissed the prompt multiple times
-    const dismissed = localStorage.getItem("installPromptDismissed");
-    if (dismissed) {
-      setDismissCount(parseInt(dismissed, 10));
+    const dismissed = parseInt(
+      localStorage.getItem("installPromptDismissed") || "0",
+      10,
+    );
+    const permanentlyDismissed =
+      localStorage.getItem("installPromptPermanentlyDismissed") === "true";
+
+    setDismissCount(dismissed);
+    if (permanentlyDismissed) {
+      return;
     }
 
-    // Show prompt after 3 visits if not dismissed too many times
     const visitCount =
       parseInt(localStorage.getItem("visitCount") || "0", 10) + 1;
     localStorage.setItem("visitCount", visitCount.toString());

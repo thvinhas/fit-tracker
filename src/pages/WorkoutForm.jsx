@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import {
   addWorkout,
   updateWorkout,
+  deleteExercise,
   getWorkouts,
   addExercise,
   updateExercise,
@@ -25,6 +26,7 @@ const WorkoutForm = () => {
     { name: "", device: "", sets: "", reps: "", currentWeight: "" },
   ]);
   const [loading, setLoading] = useState(isEdit);
+  const originalExerciseIdsRef = useRef([]);
 
   useEffect(() => {
     if (isEdit && user) {
@@ -47,6 +49,9 @@ const WorkoutForm = () => {
                   },
                 ],
           );
+          originalExerciseIdsRef.current = exercisesData
+            .map((exercise) => exercise.id)
+            .filter(Boolean);
         }
         setLoading(false);
       };
@@ -85,6 +90,20 @@ const WorkoutForm = () => {
           createdAt: new Date(),
         });
         workoutId = workoutRef.id;
+      }
+
+      if (isEdit) {
+        const currentExerciseIds = exercises
+          .map((exercise) => exercise.id)
+          .filter(Boolean);
+
+        const deletedExerciseIds = originalExerciseIdsRef.current.filter(
+          (exerciseId) => !currentExerciseIds.includes(exerciseId),
+        );
+
+        await Promise.all(
+          deletedExerciseIds.map((exerciseId) => deleteExercise(exerciseId)),
+        );
       }
 
       // Handle exercises — `order` preserva a sequência do formulário (1º = primeiro no treino)

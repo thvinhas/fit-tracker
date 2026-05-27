@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { getSessions, getWorkouts } from "../services/firestore";
@@ -9,41 +9,7 @@ import {
   buttonPrimaryLinkClass,
   buttonGhostLinkClass,
 } from "../components/Button";
-
-const localDayKey = (ms) => {
-  const d = new Date(ms);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const da = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-};
-
-const logMs = (log) => (log.date?.seconds ? log.date.seconds * 1000 : 0);
-
-const computeStreak = (logs) => {
-  const keys = new Set(logs.map((l) => localDayKey(logMs(l))));
-  if (keys.size === 0) return 0;
-  const anchor = new Date();
-  anchor.setHours(0, 0, 0, 0);
-  let check = new Date(anchor);
-  if (!keys.has(localDayKey(check.getTime()))) {
-    check.setDate(check.getDate() - 1);
-  }
-  let streak = 0;
-  for (;;) {
-    const k = localDayKey(check.getTime());
-    if (!keys.has(k)) break;
-    streak += 1;
-    check.setDate(check.getDate() - 1);
-  }
-  return streak;
-};
-
-const sessionsThisWeek = (logs) => {
-  const now = Date.now();
-  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
-  return logs.filter((l) => logMs(l) >= weekAgo).length;
-};
+import { computeStreak, sessionsThisWeek } from "../utils/dateHelpers";
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -54,23 +20,30 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
-        console.log("Carregando dados para userId:", user.uid);
         const workoutsData = await getWorkouts(user.uid);
-        console.log("Workouts carregados:", workoutsData);
         const sessionsData = await getSessions(user.uid);
-        console.log("Sessions carregados:", sessionsData);
+        if (!isMounted) return;
         setWorkouts(workoutsData);
         setSessions(sessionsData);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchData();
-  }, [user, location]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;

@@ -25,3 +25,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+SYSTEM_ANALYSIS.md
+src/pages/Dashboard.analysis.md

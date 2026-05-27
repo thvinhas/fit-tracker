@@ -4,41 +4,11 @@ import { getSessions } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import { motion } from "framer-motion";
-
-const localDayKey = (ms) => {
-  const d = new Date(ms);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const da = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-};
-
-const logMs = (log) => (log.date?.seconds ? log.date.seconds * 1000 : 0);
-
-const computeStreak = (logs) => {
-  const keys = new Set(logs.map((l) => localDayKey(logMs(l))));
-  if (keys.size === 0) return 0;
-  const anchor = new Date();
-  anchor.setHours(0, 0, 0, 0);
-  let check = new Date(anchor);
-  if (!keys.has(localDayKey(check.getTime()))) {
-    check.setDate(check.getDate() - 1);
-  }
-  let streak = 0;
-  for (;;) {
-    const k = localDayKey(check.getTime());
-    if (!keys.has(k)) break;
-    streak += 1;
-    check.setDate(check.getDate() - 1);
-  }
-  return streak;
-};
-
-const sessionsThisWeek = (logs) => {
-  const now = Date.now();
-  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
-  return logs.filter((l) => logMs(l) >= weekAgo).length;
-};
+import {
+  computeStreak,
+  getLogTimestampMs,
+  sessionsThisWeek,
+} from "../utils/dateHelpers";
 
 const Progress = () => {
   const { user, loading: authLoading } = useAuth();
@@ -47,14 +17,26 @@ const Progress = () => {
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
+    let isMounted = true;
+
+    const loadSessions = async () => {
       try {
         const data = await getSessions(user.uid);
-        setSessions(data);
+        if (isMounted) {
+          setSessions(data);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    })();
+    };
+
+    loadSessions();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
@@ -71,7 +53,9 @@ const Progress = () => {
     );
   }
 
-  const recent = [...sessions].sort((a, b) => logMs(b) - logMs(a)).slice(0, 8);
+  const recent = [...sessions]
+    .sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a))
+    .slice(0, 8);
 
   return (
     <Container title="Progresso" subtitle="Consistência e ritmo.">
@@ -170,13 +154,16 @@ const Progress = () => {
               >
                 <Card className="px-4 py-3 flex justify-between gap-3">
                   <span className="text-sm text-text-tertiary">
-                    {logMs(log)
-                      ? new Date(logMs(log)).toLocaleString("pt-BR", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                    {getLogTimestampMs(log)
+                      ? new Date(getLogTimestampMs(log)).toLocaleString(
+                          "pt-BR",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )
                       : "—"}
                   </span>
                   <span className="text-sm font-bold text-text-secondary truncate">

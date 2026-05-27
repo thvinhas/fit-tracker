@@ -1,11 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  getExercises,
-  getExerciseLogs,
-  getSessions,
-} from "../services/firestore";
+import { getExercises, getExerciseLogs } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import Accordion from "../components/Accordion";
@@ -13,16 +9,12 @@ import {
   buttonPrimaryLinkClass,
   buttonGhostLinkClass,
 } from "../components/Button";
-// offline storage removed
-
-const logTime = (log) =>
-  log.date?.seconds != null ? log.date.seconds * 1000 : 0;
+import { getLogTimestampMs } from "../utils/dateHelpers";
 
 const WorkoutView = () => {
   const { id } = useParams();
   const [exercises, setExercises] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState({});
-  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,12 +76,12 @@ const WorkoutView = () => {
             setCount: session.sets.length,
           };
         })
-        .sort((a, b) => logTime(b) - logTime(a));
+        .sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a));
 
       // Filter to show only meaningful progressions
       const filteredSessions = [];
       const sortedByOldest = [...sessionsArray].sort(
-        (a, b) => logTime(a) - logTime(b),
+        (a, b) => getLogTimestampMs(a) - getLogTimestampMs(b),
       );
 
       let maxWeightSeen = 0;
@@ -99,7 +91,6 @@ const WorkoutView = () => {
         const weight = session.bestWeight || 0;
         const reps = session.bestReps || 0;
 
-        // Always include the first session (baseline)
         if (filteredSessions.length === 0) {
           filteredSessions.push(session);
           maxWeightSeen = weight;
@@ -107,7 +98,6 @@ const WorkoutView = () => {
           return;
         }
 
-        // Include if weight increased
         if (weight > maxWeightSeen) {
           filteredSessions.push(session);
           maxWeightSeen = weight;
@@ -115,14 +105,12 @@ const WorkoutView = () => {
           return;
         }
 
-        // Include if same weight but reps increased
         if (weight === maxWeightSeen && reps > maxRepsAtMaxWeight) {
           filteredSessions.push(session);
           maxRepsAtMaxWeight = reps;
           return;
         }
 
-        // Include if it's a PR in reps at a lower weight (meaningful progression)
         const previousBestReps = Math.max(
           ...filteredSessions.map((s) => s.bestReps || 0),
         );
@@ -132,9 +120,8 @@ const WorkoutView = () => {
         }
       });
 
-      // Sort back to newest first for display
       grouped[exercise.id] = filteredSessions.sort(
-        (a, b) => logTime(b) - logTime(a),
+        (a, b) => getLogTimestampMs(b) - getLogTimestampMs(a),
       );
     });
     return grouped;
@@ -229,11 +216,13 @@ const WorkoutView = () => {
                             className="flex justify-between gap-3 text-sm text-text-tertiary py-2"
                           >
                             <span>
-                              {logTime(session)
-                                ? new Date(logTime(session)).toLocaleDateString(
-                                    "pt-BR",
-                                    { day: "2-digit", month: "short" },
-                                  )
+                              {getLogTimestampMs(session)
+                                ? new Date(
+                                    getLogTimestampMs(session),
+                                  ).toLocaleDateString("pt-BR", {
+                                    day: "2-digit",
+                                    month: "short",
+                                  })
                                 : "—"}
                             </span>
                             <span className="font-bold text-text-secondary tabular-nums">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { getSessions } from "../services/firestore";
@@ -16,11 +16,13 @@ const WorkoutCompletion = () => {
 
   useEffect(() => {
     const loadSessionData = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const sessions = await getSessions(user.uid);
-        // Get the most recent session
         const recentSession = sessions[0];
 
         if (recentSession) {
@@ -131,7 +133,7 @@ const WorkoutCompletion = () => {
                 Séries
               </p>
               <p className="text-2xl font-black text-text-primary tabular-nums">
-                {sessionData.exerciseCount || 0}
+                {sessionData.setCount || 0}
               </p>
             </Card>
           </motion.div>

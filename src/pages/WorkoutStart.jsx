@@ -117,47 +117,67 @@ const WorkoutStart = () => {
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
-      const exercisesData = await getExercises(id);
-      setExercises(exercisesData);
-
-      const lastMap = {};
-      const initialSets = {};
-
-      for (const exercise of exercisesData) {
-        const logs = await getExerciseLogs(exercise.id);
-        const last = logs[0];
-        lastMap[exercise.id] = last || null;
-
-        const n = Math.max(1, Number(exercise.sets) || 1);
-        const defaultReps = Math.max(1, Number(exercise.reps) || 10);
-        const defaultWeight = Math.max(
-          0,
-          Number(exercise.currentWeight) ||
-            (last?.weight != null ? Number(last.weight) : 0),
-        );
-
-        initialSets[exercise.id] = Array.from({ length: n }, () => ({
-          weight: defaultWeight,
-          reps: last?.reps != null ? Number(last.reps) : defaultReps,
-          completed: false,
-        }));
-      }
-
-      setLastByExercise(lastMap);
-      setSetStates(initialSets);
-
-      // Auto-expand first incomplete exercise and set
-      if (exercisesData.length > 0) {
-        const firstExerciseId = exercisesData[0].id;
-        setExpandedExerciseId(firstExerciseId);
-        setActiveSetId(`${firstExerciseId}-0`);
-      }
-
+    if (!user) {
       setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const load = async () => {
+      try {
+        const exercisesData = await getExercises(id);
+        if (!isMounted) return;
+
+        setExercises(exercisesData);
+
+        const lastMap = {};
+        const initialSets = {};
+
+        for (const exercise of exercisesData) {
+          const logs = await getExerciseLogs(exercise.id);
+          const last = logs[0];
+          lastMap[exercise.id] = last || null;
+
+          const n = Math.max(1, Number(exercise.sets) || 1);
+          const defaultReps = Math.max(1, Number(exercise.reps) || 10);
+          const defaultWeight = Math.max(
+            0,
+            Number(exercise.currentWeight) ||
+              (last?.weight != null ? Number(last.weight) : 0),
+          );
+
+          initialSets[exercise.id] = Array.from({ length: n }, () => ({
+            weight: defaultWeight,
+            reps: last?.reps != null ? Number(last.reps) : defaultReps,
+            completed: false,
+          }));
+        }
+
+        if (!isMounted) return;
+        setLastByExercise(lastMap);
+        setSetStates(initialSets);
+
+        if (exercisesData.length > 0) {
+          const firstExerciseId = exercisesData[0].id;
+          setExpandedExerciseId(firstExerciseId);
+          setActiveSetId(`${firstExerciseId}-0`);
+        }
+      } catch (error) {
+        console.error("Error loading workout start data:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     };
+
     load();
-  }, [id]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, user]);
 
   const updateSet = useCallback(
     (exerciseId, setIndex, patch) => {

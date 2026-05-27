@@ -15,15 +15,12 @@ export const getWorkouts = async (userId) => {
   const q = query(collection(db, "workouts"), where("userId", "==", userId));
   const snapshot = await getDocs(q);
   const workouts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  console.log("getWorkouts - userId:", userId, "encontrados:", workouts.length);
   // Sort by order field client-side
   return workouts.sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
 export const addWorkout = async (workout) => {
-  console.log("addWorkout - dados:", workout);
   const result = await addDoc(collection(db, "workouts"), workout);
-  console.log("addWorkout - criado com ID:", result.id);
   return result;
 };
 
@@ -102,7 +99,6 @@ export const getSessions = async (userId) => {
   const q = query(collection(db, "sessions"), where("userId", "==", userId));
   const snapshot = await getDocs(q);
   const sessions = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  console.log("getSessions - userId:", userId, "encontrados:", sessions.length);
   // Sort by date client-side (newest first)
   return sessions.sort(
     (a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0),
