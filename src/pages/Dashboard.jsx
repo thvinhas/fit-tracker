@@ -9,11 +9,15 @@ import {
   buttonPrimaryLinkClass,
   buttonGhostLinkClass,
 } from "../components/Button";
-import { computeStreak, sessionsThisWeek } from "../utils/dateHelpers";
+import {
+  getLocalDayKey,
+  getLogTimestampMs,
+  computeStreak,
+  sessionsThisWeek,
+} from "../utils/dateHelpers";
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
-  const location = useLocation();
   const [workouts, setWorkouts] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +51,16 @@ const Dashboard = () => {
 
   const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;
-    const completedIds = sessions.map((session) => session.workoutId);
-    const next = workouts.find((w) => !completedIds.includes(w.id));
+
+    const today = getLocalDayKey(Date.now());
+    const todaysSessions = sessions.filter(
+      (session) => getLocalDayKey(getLogTimestampMs(session)) === today,
+    );
+    const completedTodayIds = todaysSessions.map(
+      (session) => session.workoutId,
+    );
+
+    const next = workouts.find((w) => !completedTodayIds.includes(w.id));
     return next || workouts[0];
   }, [workouts, sessions]);
 

@@ -26,21 +26,21 @@ const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value - 1, 0, 500))}
-      className="h-11 w-11 rounded-[14px] bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-8 w-8 rounded-[10px] bg-surface2 border border-border-subtle text-xs font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Diminuir peso"
     >
       −
     </motion.button>
-    <div className="min-w-[4rem] text-center px-1">
+    <div className="min-w-[3rem] text-center px-1">
       <motion.span
         key={value}
         initial={{ scale: 1.2, opacity: 0.5 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="text-[28px] font-bold tabular-nums text-text-primary leading-none"
+        className="text-[20px] font-bold tabular-nums text-text-primary leading-none"
       >
         {value}
       </motion.span>
-      <span className="text-[16px] font-semibold text-text-muted ml-0.5 opacity-70">
+      <span className="text-[12px] font-semibold text-text-muted ml-0.5 opacity-70">
         {label}
       </span>
     </div>
@@ -50,7 +50,7 @@ const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value + 1, 0, 500))}
-      className="h-11 w-11 rounded-[14px] bg-surface2 border border-border-subtle text-sm font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-8 w-8 rounded-[10px] bg-surface2 border border-border-subtle text-xs font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Aumentar peso"
     >
       +
@@ -709,120 +709,123 @@ const WorkoutStart = () => {
                                       : "bg-surface2 border border-border-subtle hover:border-border-hover"
                                 }`}
                               >
-                                {/* Compact Set Row */}
+                                {/* Compact Set Row - Responsive */}
                                 <div
-                                  className={`flex items-center gap-2 p-3 min-h-[72px] ${setActive ? "bg-gradient-to-r from-primary/5 to-transparent" : ""}`}
+                                  className={`flex flex-col gap-2 p-3 ${setActive ? "bg-gradient-to-r from-primary/5 to-transparent" : ""}`}
                                 >
-                                  {/* Set Number & Check */}
-                                  <div className="flex items-center gap-2 min-w-[4rem]">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                                      {setIndex + 1}
-                                    </span>
-                                    <motion.button
-                                      type="button"
-                                      whileTap={{ scale: 0.85 }}
-                                      whileHover={{ scale: 1.05 }}
-                                      onClick={() => {
-                                        updateSet(exercise.id, setIndex, {
-                                          completed: !row.completed,
-                                        });
-                                        if (!row.completed) {
-                                          setActiveSetId(setKey);
+                                  {/* Main Row - Set Number, Check, Weight, Reps */}
+                                  <div className="flex items-center gap-2 w-full">
+                                    {/* Set Number & Check */}
+                                    <div className="flex items-center gap-2 min-w-fit">
+                                      <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                                        {setIndex + 1}
+                                      </span>
+                                      <motion.button
+                                        type="button"
+                                        whileTap={{ scale: 0.85 }}
+                                        whileHover={{ scale: 1.05 }}
+                                        onClick={() => {
+                                          updateSet(exercise.id, setIndex, {
+                                            completed: !row.completed,
+                                          });
+                                          if (!row.completed) {
+                                            setActiveSetId(setKey);
+                                          }
+                                        }}
+                                        className={`flex h-9 w-9 items-center justify-center rounded-[12px] border transition-all duration-200 ${
+                                          row.completed
+                                            ? "border-primary bg-primary text-black shadow-glow-sm"
+                                            : setActive
+                                              ? "border-primary/50 text-primary hover:border-primary hover:bg-primary/10"
+                                              : "border-border-subtle text-text-muted hover:border-primary/50 hover:text-primary"
+                                        }`}
+                                        aria-label={
+                                          row.completed
+                                            ? "Desmarcar série"
+                                            : "Concluir série"
                                         }
-                                      }}
-                                      className={`flex h-11 w-11 items-center justify-center rounded-[14px] border transition-all duration-200 ${
-                                        row.completed
-                                          ? "border-primary bg-primary text-black shadow-glow-sm"
-                                          : setActive
-                                            ? "border-primary/50 text-primary hover:border-primary hover:bg-primary/10"
-                                            : "border-border-subtle text-text-muted hover:border-primary/50 hover:text-primary"
-                                      }`}
-                                      aria-label={
-                                        row.completed
-                                          ? "Desmarcar série"
-                                          : "Concluir série"
-                                      }
-                                    >
-                                      <AnimatePresence
-                                        mode="wait"
-                                        initial={false}
                                       >
-                                        {row.completed ? (
-                                          <motion.svg
-                                            key="check"
-                                            initial={{ scale: 0.3, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            exit={{ scale: 0.3, opacity: 0 }}
-                                            transition={{
-                                              type: "spring",
-                                              stiffness: 400,
-                                              damping: 20,
-                                            }}
-                                            className="h-[14px] w-[14px]"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            strokeWidth={3}
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              d="M5 13l4 4L19 7"
+                                        <AnimatePresence
+                                          mode="wait"
+                                          initial={false}
+                                        >
+                                          {row.completed ? (
+                                            <motion.svg
+                                              key="check"
+                                              initial={{ scale: 0.3, opacity: 0 }}
+                                              animate={{ scale: 1, opacity: 1 }}
+                                              exit={{ scale: 0.3, opacity: 0 }}
+                                              transition={{
+                                                type: "spring",
+                                                stiffness: 400,
+                                                damping: 20,
+                                              }}
+                                              className="h-[12px] w-[12px]"
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                              strokeWidth={3}
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M5 13l4 4L19 7"
+                                              />
+                                            </motion.svg>
+                                          ) : (
+                                            <motion.div
+                                              key="dot"
+                                              initial={{ scale: 0.5, opacity: 0 }}
+                                              animate={{ scale: 1, opacity: 1 }}
+                                              exit={{ scale: 0.5, opacity: 0 }}
+                                              transition={{
+                                                type: "spring",
+                                                stiffness: 400,
+                                                damping: 25,
+                                              }}
+                                              className="h-[10px] w-[10px] rounded-full bg-text-muted"
                                             />
-                                          </motion.svg>
-                                        ) : (
-                                          <motion.div
-                                            key="dot"
-                                            initial={{ scale: 0.5, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            exit={{ scale: 0.5, opacity: 0 }}
-                                            transition={{
-                                              type: "spring",
-                                              stiffness: 400,
-                                              damping: 25,
-                                            }}
-                                            className="h-[14px] w-[14px] rounded-full bg-text-muted"
-                                          />
-                                        )}
-                                      </AnimatePresence>
-                                    </motion.button>
-                                  </div>
+                                          )}
+                                        </AnimatePresence>
+                                      </motion.button>
+                                    </div>
 
-                                  {/* Weight Stepper - Always visible but compact */}
-                                  <div
-                                    className={`flex-1 ${row.completed ? "opacity-40 pointer-events-none" : ""}`}
-                                  >
-                                    <CompactWeightStepper
-                                      value={Number(row.weight) || 0}
-                                      onChange={(w) =>
-                                        updateSet(exercise.id, setIndex, {
-                                          weight: w,
-                                        })
-                                      }
-                                      disabled={row.completed}
-                                    />
-                                  </div>
+                                    {/* Weight Stepper */}
+                                    <div
+                                      className={`${row.completed ? "opacity-40 pointer-events-none" : ""}`}
+                                    >
+                                      <CompactWeightStepper
+                                        value={Number(row.weight) || 0}
+                                        onChange={(w) =>
+                                          updateSet(exercise.id, setIndex, {
+                                            weight: w,
+                                          })
+                                        }
+                                        disabled={row.completed}
+                                      />
+                                    </div>
 
-                                  {/* Repetition Count - Visual Display */}
-                                  <div className="flex items-center gap-1 min-w-[5rem]">
-                                    <span
-                                      className={`text-lg font-bold tabular-nums ${
-                                        row.completed
-                                          ? "text-primary"
-                                          : "text-text-primary"
-                                      }`}
-                                    >
-                                      {row.reps}
-                                    </span>
-                                    <span
-                                      className={`text-xs font-medium ${
-                                        row.completed
-                                          ? "text-primary"
-                                          : "text-text-muted"
-                                      }`}
-                                    >
-                                      repetições
-                                    </span>
+                                    {/* Reps Display and Label */}
+                                    <div className="flex flex-col items-center gap-0">
+                                      <span
+                                        className={`text-base font-bold tabular-nums ${
+                                          row.completed
+                                            ? "text-primary"
+                                            : "text-text-primary"
+                                        }`}
+                                      >
+                                        x{row.reps}
+                                      </span>
+                                      <span
+                                        className={`text-[10px] font-medium leading-tight ${
+                                          row.completed
+                                            ? "text-primary"
+                                            : "text-text-muted"
+                                        }`}
+                                      >
+                                        reps
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               </motion.div>
