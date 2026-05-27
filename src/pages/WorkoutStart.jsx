@@ -10,7 +10,6 @@ import {
   addSession,
 } from "../services/firestore";
 import { useAuth } from "../hooks/useAuth";
-import { useOfflineStorage } from "../hooks/useOfflineStorage";
 import toast from "react-hot-toast";
 import Button, { buttonGhostLinkClass } from "../components/Button";
 
@@ -100,14 +99,7 @@ const WorkoutStart = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const {
-    getExercisesWithCache,
-    isOnline,
-    queueUpdateExercise,
-    queueAddSession,
-    queueAddExerciseLog,
-    queueAddWorkoutLog,
-  } = useOfflineStorage();
+  // offline storage removed — use direct Firestore calls
   const [exercises, setExercises] = useState([]);
   const [lastByExercise, setLastByExercise] = useState({});
   const [setStates, setSetStates] = useState({});
@@ -126,7 +118,7 @@ const WorkoutStart = () => {
 
   useEffect(() => {
     const load = async () => {
-      const exercisesData = await getExercisesWithCache(id);
+      const exercisesData = await getExercises(id);
       setExercises(exercisesData);
 
       const lastMap = {};
@@ -165,7 +157,7 @@ const WorkoutStart = () => {
       setLoading(false);
     };
     load();
-  }, [id, getExercisesWithCache]);
+  }, [id]);
 
   const updateSet = useCallback(
     (exerciseId, setIndex, patch) => {
@@ -286,15 +278,9 @@ const WorkoutStart = () => {
 
         if (exerciseHasCompletedSets) {
           completedExercisesCount++;
-          if (isOnline) {
-            exerciseUpdates.push(
-              updateExercise(exercise.id, { currentWeight: lastWeight }),
-            );
-          } else {
-            await queueUpdateExercise(exercise.id, {
-              currentWeight: lastWeight,
-            });
-          }
+          exerciseUpdates.push(
+            updateExercise(exercise.id, { currentWeight: lastWeight }),
+          );
         }
       }
 
@@ -304,35 +290,19 @@ const WorkoutStart = () => {
         return;
       }
 
-      // Parallel updates if online
-      if (isOnline) {
-        await Promise.all(exerciseUpdates);
-      }
+      // Apply updates
+      await Promise.all(exerciseUpdates);
 
-      let sessionId;
-      if (isOnline) {
-        const sessionRef = await addSession({
-          workoutId: id,
-          userId: user.uid,
-          date: new Date(),
-          duration,
-          totalVolume,
-          exerciseCount: completedExercisesCount,
-          setCount: completedSetsCount,
-        });
-        sessionId = sessionRef.id;
-      } else {
-        sessionId = `offline-${Date.now()}`;
-        await queueAddSession({
-          workoutId: id,
-          userId: user.uid,
-          date: new Date(),
-          duration,
-          totalVolume,
-          exerciseCount: completedExercisesCount,
-          setCount: completedSetsCount,
-        });
-      }
+      const sessionRef = await addSession({
+        workoutId: id,
+        userId: user.uid,
+        date: new Date(),
+        duration,
+        totalVolume,
+        exerciseCount: completedExercisesCount,
+        setCount: completedSetsCount,
+      });
+      const sessionId = sessionRef.id;
 
       // Collect all logs in parallel
       for (const exercise of exercises) {
@@ -352,38 +322,20 @@ const WorkoutStart = () => {
             sessionId,
             date: new Date(),
           };
-          if (isOnline) {
-            exerciseLogs.push(addExerciseLog(logData));
-          } else {
-            await queueAddExerciseLog(logData);
-          }
+          exerciseLogs.push(addExerciseLog(logData));
         }
       }
 
-      // Parallel log creation if online
-      if (isOnline) {
-        await Promise.all(exerciseLogs);
-      }
+      // Parallel log creation
+      await Promise.all(exerciseLogs);
 
-      if (isOnline) {
-        await addWorkoutLog({
-          workoutId: id,
-          userId: user.uid,
-          date: new Date(),
-        });
-      } else {
-        await queueAddWorkoutLog({
-          workoutId: id,
-          userId: user.uid,
-          date: new Date(),
-        });
-      }
+      await addWorkoutLog({
+        workoutId: id,
+        userId: user.uid,
+        date: new Date(),
+      });
 
-      toast.success(
-        isOnline
-          ? "Treino concluído!"
-          : "Treino salvo offline. Sincronizará quando online.",
-      );
+      toast.success("Treino concluído!");
       navigate(`/workout/${id}/completion`, { replace: true });
     } catch (error) {
       toast.error("Erro ao finalizar: " + error.message);
