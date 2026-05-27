@@ -72,8 +72,63 @@ const WorkoutForm = () => {
     setExercises(newExercises);
   };
 
+  const moveExercise = (index, direction) => {
+    const nextExercises = [...exercises];
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= nextExercises.length) return;
+    [nextExercises[index], nextExercises[swapIndex]] = [
+      nextExercises[swapIndex],
+      nextExercises[index],
+    ];
+    setExercises(nextExercises);
+  };
+
   const handleRemoveExercise = (index) => {
     setExercises(exercises.filter((_, i) => i !== index));
+  };
+
+  const getDuplicateName = (workoutName) => {
+    const match = workoutName.match(/^(.*?)\s+(\d+)$/);
+    if (!match) {
+      return `${workoutName} 2`;
+    }
+    const baseName = match[1];
+    const currentNumber = Number(match[2]);
+    return `${baseName} ${currentNumber + 1}`;
+  };
+
+  const handleDuplicate = async () => {
+    try {
+      setLoading(true);
+      const duplicateName = getDuplicateName(name);
+      const workoutRef = await addWorkout({
+        name: duplicateName,
+        userId: user.uid,
+        order: Date.now(),
+        createdAt: new Date(),
+      });
+
+      await Promise.all(
+        exercises.map((exercise, index) =>
+          addExercise({
+            workoutId: workoutRef.id,
+            name: exercise.name,
+            device: exercise.device,
+            sets: exercise.sets,
+            reps: exercise.reps,
+            currentWeight: exercise.currentWeight,
+            order: index,
+            createdAt: new Date(),
+          }),
+        ),
+      );
+
+      toast.success("Treino duplicado!");
+      navigate("/workouts");
+    } catch (error) {
+      setLoading(false);
+      toast.error("Erro: " + error.message);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -180,6 +235,35 @@ const WorkoutForm = () => {
           <div className="space-y-6">
             {exercises.map((exercise, index) => (
               <Card key={index} className="p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">
+                      Exercício {index + 1}
+                    </p>
+                  </div>
+                  {exercises.length > 1 && (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => moveExercise(index, "up")}
+                        disabled={index === 0}
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => moveExercise(index, "down")}
+                        disabled={index === exercises.length - 1}
+                      >
+                        ↓
+                      </Button>
+                    </div>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Input
                     label="Nome do exercício"
@@ -261,7 +345,17 @@ const WorkoutForm = () => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          {isEdit && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              onClick={handleDuplicate}
+            >
+              Duplicar treino
+            </Button>
+          )}
           <Button type="submit" size="lg">
             {isEdit ? "Atualizar Treino" : "Criar Treino"}
           </Button>

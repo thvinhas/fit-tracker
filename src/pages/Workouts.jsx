@@ -15,6 +15,8 @@ const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const [workouts, setWorkouts] = useState([]);
+  const [draftWorkouts, setDraftWorkouts] = useState([]);
+  const [isReorderMode, setIsReorderMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +28,43 @@ const Workouts = () => {
     };
     fetchWorkouts();
   }, [user, location]);
+
+  const startReorder = () => {
+    setDraftWorkouts([...workouts]);
+    setIsReorderMode(true);
+  };
+
+  const cancelReorder = () => {
+    setIsReorderMode(false);
+  };
+
+  const moveWorkout = (index, direction) => {
+    const next = [...draftWorkouts];
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= next.length) return;
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+    setDraftWorkouts(next);
+  };
+
+  const saveReorder = async () => {
+    try {
+      await Promise.all(
+        draftWorkouts.map((workout, index) =>
+          updateWorkout(workout.id, { order: index }),
+        ),
+      );
+      setWorkouts(
+        draftWorkouts.map((workout, index) => ({
+          ...workout,
+          order: index,
+        })),
+      );
+      setIsReorderMode(false);
+      toast.success("Ordem dos treinos atualizada!");
+    } catch (error) {
+      toast.error("Erro ao atualizar ordem: " + error.message);
+    }
+  };
 
   const handleDelete = async (workoutId) => {
     if (
@@ -58,9 +97,37 @@ const Workouts = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
-        <Link to="/workouts/new" className={`${buttonPrimaryLinkClass} mb-8`}>
-          Novo treino
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
+          <Link to="/workouts/new" className={`${buttonPrimaryLinkClass}`}>
+            Novo treino
+          </Link>
+          <div className="flex flex-wrap gap-2">
+            {isReorderMode ? (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={cancelReorder}
+                >
+                  Cancelar
+                </Button>
+                <Button type="button" size="sm" onClick={saveReorder}>
+                  Salvar ordem
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={startReorder}
+              >
+                Organizar treinos
+              </Button>
+            )}
+          </div>
+        </div>
       </motion.div>
 
       <motion.div
@@ -97,7 +164,7 @@ const Workouts = () => {
         </motion.div>
       ) : (
         <div className="flex flex-col gap-2">
-          {workouts.map((workout, index) => (
+          {(isReorderMode ? draftWorkouts : workouts).map((workout, index) => (
             <motion.div
               key={workout.id}
               initial={{ opacity: 0, y: 10 }}
@@ -110,32 +177,67 @@ const Workouts = () => {
               }}
             >
               <Card className="p-4">
-                <h4 className="text-base font-bold text-text-primary mb-4">
-                  {workout.name}
-                </h4>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/workout/${workout.id}`}
-                    className={`${buttonSecondaryLinkClass} flex-1`}
-                  >
-                    Abrir
-                  </Link>
-                  <Link
-                    to={`/workouts/${workout.id}/edit`}
-                    className={`${buttonSecondaryLinkClass} flex-1`}
-                  >
-                    Editar
-                  </Link>
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    className="flex-1 !px-2"
-                    onClick={() => handleDelete(workout.id)}
-                  >
-                    Excluir
-                  </Button>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h4 className="text-base font-bold text-text-primary">
+                      {workout.name}
+                    </h4>
+                    <p className="text-sm text-text-muted">Ordem {index + 1}</p>
+                  </div>
+                  {isReorderMode && (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => moveWorkout(index, "up")}
+                        disabled={index === 0}
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => moveWorkout(index, "down")}
+                        disabled={
+                          index ===
+                          (isReorderMode
+                            ? draftWorkouts.length
+                            : workouts.length) -
+                            1
+                        }
+                      >
+                        ↓
+                      </Button>
+                    </div>
+                  )}
                 </div>
+                {!isReorderMode && (
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/workout/${workout.id}`}
+                      className={`${buttonSecondaryLinkClass} flex-1`}
+                    >
+                      Abrir
+                    </Link>
+                    <Link
+                      to={`/workouts/${workout.id}/edit`}
+                      className={`${buttonSecondaryLinkClass} flex-1`}
+                    >
+                      Editar
+                    </Link>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      className="flex-1 !px-2"
+                      onClick={() => handleDelete(workout.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </div>
+                )}
               </Card>
             </motion.div>
           ))}
