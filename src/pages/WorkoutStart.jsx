@@ -563,7 +563,8 @@ const WorkoutStart = () => {
             const isExpanded = expandedExerciseId === exercise.id;
             const completedSets = rows.filter((r) => r.completed).length;
             const totalExerciseSets = rows.length;
-            const isComplete = completedSets === totalExerciseSets;
+            const isComplete =
+              rows.length > 0 && completedSets === totalExerciseSets;
             const last = lastByExercise[exercise.id];
             const lastLabel =
               last && last.weight != null && last.reps != null
