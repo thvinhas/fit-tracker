@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
-import { deleteWorkout, getWorkouts } from "../services/firestore";
+import {
+  deleteWorkout,
+  getWorkouts,
+  updateWorkout,
+} from "../services/firestore";
 import toast from "react-hot-toast";
 import Container from "../components/Container";
 import Card from "../components/Card";
@@ -13,7 +17,6 @@ import Button, {
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
-  const location = useLocation();
   const [workouts, setWorkouts] = useState([]);
   const [draftWorkouts, setDraftWorkouts] = useState([]);
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -27,7 +30,7 @@ const Workouts = () => {
       setLoading(false);
     };
     fetchWorkouts();
-  }, [user, location]);
+  }, [user]);
 
   const startReorder = () => {
     setDraftWorkouts([...workouts]);

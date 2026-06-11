@@ -131,11 +131,15 @@ const WorkoutStart = () => {
 
         setExercises(exercisesData);
 
+        const logsByExercise = await Promise.all(
+          exercisesData.map((exercise) => getExerciseLogs(exercise.id)),
+        );
+
         const lastMap = {};
         const initialSets = {};
 
-        for (const exercise of exercisesData) {
-          const logs = await getExerciseLogs(exercise.id);
+        exercisesData.forEach((exercise, index) => {
+          const logs = logsByExercise[index] || [];
           const last = logs[0];
           lastMap[exercise.id] = last || null;
 
@@ -152,7 +156,7 @@ const WorkoutStart = () => {
             reps: last?.reps != null ? Number(last.reps) : defaultReps,
             completed: false,
           }));
-        }
+        });
 
         if (!isMounted) return;
         setLastByExercise(lastMap);

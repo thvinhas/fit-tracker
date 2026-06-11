@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
@@ -14,6 +14,7 @@ import {
   getLogTimestampMs,
   computeStreak,
   sessionsThisWeek,
+  formatRelativeDate,
 } from "../utils/dateHelpers";
 
 const Dashboard = () => {
@@ -22,14 +23,30 @@ const Dashboard = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [workoutsData, sessionsData] = await Promise.all([
+        getWorkouts(user.uid),
+        getSessions(user.uid),
+      ]);
+      setWorkouts(workoutsData);
+      setSessions(sessionsData);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     let isMounted = true;
 
     const fetchData = async () => {
       try {
-        const workoutsData = await getWorkouts(user.uid);
-        const sessionsData = await getSessions(user.uid);
+        const [workoutsData, sessionsData] = await Promise.all([
+          getWorkouts(user.uid),
+          getSessions(user.uid),
+        ]);
         if (!isMounted) return;
         setWorkouts(workoutsData);
         setSessions(sessionsData);
@@ -49,12 +66,20 @@ const Dashboard = () => {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const onFocus = () => loadData();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [user, loadData]);
+
+  const [todayKey] = useState(() => getLocalDayKey(Date.now()));
+
   const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;
 
-    const today = getLocalDayKey(Date.now());
     const todaysSessions = sessions.filter(
-      (session) => getLocalDayKey(getLogTimestampMs(session)) === today,
+      (session) => getLocalDayKey(getLogTimestampMs(session)) === todayKey,
     );
     const completedTodayIds = todaysSessions.map(
       (session) => session.workoutId,
@@ -62,10 +87,29 @@ const Dashboard = () => {
 
     const next = workouts.find((w) => !completedTodayIds.includes(w.id));
     return next || workouts[0];
-  }, [workouts, sessions]);
+  }, [workouts, sessions, todayKey]);
 
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const weekCount = useMemo(() => sessionsThisWeek(sessions), [sessions]);
+
+  const workoutMap = useMemo(() => {
+    const map = {};
+    workouts.forEach((w) => {
+      map[w.id] = w.name;
+    });
+    return map;
+  }, [workouts]);
+
+  const recentSessions = useMemo(() => {
+    return [...sessions]
+      .sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a))
+      .slice(0, 5)
+      .filter((s) => s.workoutId)
+      .map((session) => ({
+        ...session,
+        workoutName: workoutMap[session.workoutId] || "Treino",
+      }));
+  }, [sessions, workoutMap]);
 
   if (authLoading) {
     return (
@@ -197,10 +241,61 @@ const Dashboard = () => {
         </motion.div>
       )}
 
+      {recentSessions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 0.3,
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+          }}
+          className="mb-6"
+        >
+          <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-3">
+            Últimas sessões
+          </h3>
+          <div className="flex flex-col gap-2">
+            {recentSessions.map((session, index) => (
+              <motion.div
+                key={session.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: 0.35 + index * 0.05,
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25,
+                }}
+              >
+                <Link to={`/workout/${session.workoutId}/start`}>
+                  <Card className="p-3 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform hover:bg-surface2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-text-primary truncate">
+                        {session.workoutName}
+                      </p>
+                      <p className="text-xs text-text-tertiary mt-0.5">
+                        {formatRelativeDate(getLogTimestampMs(session))}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[10px] font-bold uppercase px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+                      {session.duration
+                        ? `${Math.floor(session.duration / 60)} min`
+                        : "Feito"}
+                    </span>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, type: "spring", stiffness: 400, damping: 25 }}
+        transition={{ delay: 0.4, type: "spring", stiffness: 400, damping: 25 }}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">
@@ -227,7 +322,9 @@ const Dashboard = () => {
           <div className="flex flex-col gap-2">
             {workouts.map((workout, index) => {
               const done = sessions.some(
-                (session) => session.workoutId === workout.id,
+                (session) =>
+                  session.workoutId === workout.id &&
+                  getLocalDayKey(getLogTimestampMs(session)) === todayKey,
               );
               return (
                 <motion.div
@@ -235,7 +332,7 @@ const Dashboard = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
-                    delay: 0.4 + index * 0.05,
+                    delay: 0.5 + index * 0.05,
                     type: "spring",
                     stiffness: 400,
                     damping: 25,

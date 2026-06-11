@@ -49,3 +49,21 @@ export const sessionsThisWeek = (logs) => {
 export const sortLogsByDateDesc = (logs) => {
   return [...logs].sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a));
 };
+
+export const formatRelativeDate = (timestampMs) => {
+  const diff = Date.now() - timestampMs;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "agora mesmo";
+  if (minutes < 60) return `há ${minutes} min`;
+  if (hours < 24) return `há ${hours}h`;
+  if (days < 7) return `há ${days} ${days === 1 ? "dia" : "dias"}`;
+
+  const date = new Date(timestampMs);
+  return date.toLocaleDateString("pt-BR", {
+    day: "numeric",
+    month: "short",
+  });
+};

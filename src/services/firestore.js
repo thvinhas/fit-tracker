@@ -7,16 +7,19 @@ import {
   deleteDoc,
   query,
   where,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
 // Workouts
 export const getWorkouts = async (userId) => {
-  const q = query(collection(db, "workouts"), where("userId", "==", userId));
+  const q = query(
+    collection(db, "workouts"),
+    where("userId", "==", userId),
+    orderBy("order"),
+  );
   const snapshot = await getDocs(q);
-  const workouts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  // Sort by order field client-side
-  return workouts.sort((a, b) => (a.order || 0) - (b.order || 0));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
 export const addWorkout = async (workout) => {
@@ -37,6 +40,7 @@ export const getExercises = async (workoutId) => {
   const q = query(
     collection(db, "exercises"),
     where("workoutId", "==", workoutId),
+    orderBy("order"),
   );
   const snapshot = await getDocs(q);
   const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -67,11 +71,13 @@ export const deleteExercise = async (id) => {
 
 // Workout Logs
 export const getWorkoutLogs = async (userId) => {
-  const q = query(collection(db, "workoutLogs"), where("userId", "==", userId));
+  const q = query(
+    collection(db, "workoutLogs"),
+    where("userId", "==", userId),
+    orderBy("date", "desc"),
+  );
   const snapshot = await getDocs(q);
-  const logs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  // Sort by date client-side (newest first)
-  return logs.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
 export const addWorkoutLog = async (log) => {
@@ -83,11 +89,10 @@ export const getExerciseLogs = async (exerciseId) => {
   const q = query(
     collection(db, "exerciseLogs"),
     where("exerciseId", "==", exerciseId),
+    orderBy("date", "desc"),
   );
   const snapshot = await getDocs(q);
-  const logs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  // Sort by date client-side (newest first)
-  return logs.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
 export const addExerciseLog = async (log) => {
@@ -96,13 +101,13 @@ export const addExerciseLog = async (log) => {
 
 // Sessions - New collection to track workout sessions
 export const getSessions = async (userId) => {
-  const q = query(collection(db, "sessions"), where("userId", "==", userId));
-  const snapshot = await getDocs(q);
-  const sessions = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  // Sort by date client-side (newest first)
-  return sessions.sort(
-    (a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0),
+  const q = query(
+    collection(db, "sessions"),
+    where("userId", "==", userId),
+    orderBy("date", "desc"),
   );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
 export const addSession = async (session) => {
@@ -113,9 +118,8 @@ export const getSessionExerciseLogs = async (sessionId) => {
   const q = query(
     collection(db, "exerciseLogs"),
     where("sessionId", "==", sessionId),
+    orderBy("date", "desc"),
   );
   const snapshot = await getDocs(q);
-  const logs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  // Sort by date client-side (newest first)
-  return logs.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
