@@ -5,6 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 import { getSessions, getWorkouts } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
+import WeeklyRing from "../components/WeeklyRing";
 import {
   buttonPrimaryLinkClass,
   buttonGhostLinkClass,
@@ -15,7 +16,19 @@ import {
   computeStreak,
   sessionsThisWeek,
   formatRelativeDate,
+  weeklyVolume,
 } from "../utils/dateHelpers";
+
+const WEEKLY_GOAL = 5;
+
+const greeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
+};
+
+const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -91,6 +104,17 @@ const Dashboard = () => {
 
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const weekCount = useMemo(() => sessionsThisWeek(sessions), [sessions]);
+  const volume = useMemo(() => weeklyVolume(sessions), [sessions]);
+  const firstName = (user?.displayName || user?.email || "").split(
+    /[\s@]/,
+  )[0];
+  const todayLabel = capitalize(
+    new Date().toLocaleDateString("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+    }),
+  );
 
   const workoutMap = useMemo(() => {
     const map = {};
@@ -131,56 +155,46 @@ const Dashboard = () => {
   }
 
   return (
-    <Container title="Início" subtitle="Foco no treino de hoje.">
-      <div className="flex gap-3 mb-6">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className="flex-1 rounded-2xl bg-surface3 border-border-subtle px-4 py-4 shadow-inner-glow"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <motion.span
-              animate={{ rotate: [0, -10, 10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              className="text-lg"
-            >
-              🔥
-            </motion.span>
-            <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold">
-              Streak
-            </p>
-          </div>
-          <p className="text-3xl font-black text-primary tabular-nums tracking-tight">
-            {streak}
-            <span className="text-sm font-bold text-text-muted ml-1">dias</span>
-          </p>
-        </motion.div>
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 25,
-            delay: 0.1,
-          }}
-          className="flex-1 rounded-2xl bg-surface3 border-border-subtle px-4 py-4 shadow-inner-glow"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">💪</span>
-            <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold">
-              7 dias
-            </p>
-          </div>
-          <p className="text-3xl font-black text-text-primary tabular-nums tracking-tight">
-            {weekCount}
-            <span className="text-sm font-bold text-text-muted ml-1">
-              sessões
-            </span>
-          </p>
-        </motion.div>
+    <Container>
+      <div className="mb-6">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
+          {todayLabel}
+        </p>
+        <h1 className="text-2xl font-extrabold text-text-primary tracking-tight mt-0.5">
+          {greeting()}, {firstName}
+        </h1>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="flex gap-3 mb-6"
+      >
+        <WeeklyRing completed={weekCount} goal={WEEKLY_GOAL} />
+        <div className="flex-1 flex flex-col gap-2">
+          <div className="flex-1 rounded-2xl bg-surface3 border-border-subtle px-4 py-3 flex items-center justify-between shadow-inner-glow">
+            <p className="text-[11px] uppercase tracking-wider text-text-muted font-bold">
+              Sequência
+            </p>
+            <p className="text-lg font-extrabold text-primary tabular-nums">
+              {streak}
+              <span className="text-xs font-bold text-text-muted ml-1">
+                dias
+              </span>
+            </p>
+          </div>
+          <div className="flex-1 rounded-2xl bg-surface3 border-border-subtle px-4 py-3 flex items-center justify-between shadow-inner-glow">
+            <p className="text-[11px] uppercase tracking-wider text-text-muted font-bold">
+              Volume 7d
+            </p>
+            <p className="text-lg font-extrabold text-text-primary tabular-nums">
+              {(volume / 1000).toFixed(1)}
+              <span className="text-xs font-bold text-text-muted ml-1">t</span>
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       {workoutOfTheDay ? (
         <motion.div
@@ -230,7 +244,7 @@ const Dashboard = () => {
           }}
           className="mb-6"
         >
-          <Card className="p-5 border-accent/30 bg-accent/5 shadow-glow-accent">
+          <Card className="p-5 border-primary/30 bg-primaryDim">
             <p className="text-sm text-text-secondary font-bold mb-4">
               Crie um treino para começar a registrar progresso.
             </p>

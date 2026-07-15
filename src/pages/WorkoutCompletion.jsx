@@ -151,7 +151,7 @@ const WorkoutCompletion = () => {
           }}
           className="mb-6"
         >
-          <Card className="p-5 border-accent/30 bg-accent/5 shadow-glow-accent">
+          <Card className="p-5 border-secondary/30 bg-secondaryDim">
             <div className="flex items-center gap-3">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
@@ -167,7 +167,7 @@ const WorkoutCompletion = () => {
                 🔥
               </motion.div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-1">
                   Novo PR!
                 </p>
                 <p className="text-base font-bold text-text-primary">

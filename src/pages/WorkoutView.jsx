@@ -1,15 +1,28 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getExercises, getExerciseLogs } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import Accordion from "../components/Accordion";
+import Sparkline from "../components/Sparkline";
 import {
   buttonPrimaryLinkClass,
   buttonGhostLinkClass,
 } from "../components/Button";
 import { getLogTimestampMs } from "../utils/dateHelpers";
+
+const isPRSession = (sortedSessions, index) => {
+  const session = sortedSessions[index];
+  if (!session) return false;
+  const prev = sortedSessions[index + 1];
+  if (!prev) return true;
+  return (
+    (session.bestWeight || 0) > (prev.bestWeight || 0) ||
+    ((session.bestWeight || 0) === (prev.bestWeight || 0) &&
+      (session.bestReps || 0) > (prev.bestReps || 0))
+  );
+};
 
 const WorkoutView = () => {
   const { id } = useParams();
@@ -168,47 +181,66 @@ const WorkoutView = () => {
             </p>
           </Card>
         ) : (
-          exercises.map((exercise, index) => (
-            <motion.div
-              key={exercise.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                delay: index * 0.05,
-                type: "spring",
-                stiffness: 400,
-                damping: 25,
-              }}
-              className="gpu-accelerated"
-            >
-              <Card className="p-4 touch-feedback">
-                <div className="mb-3">
-                  <h3 className="text-base font-bold text-text-primary">
-                    {exercise.name}
-                  </h3>
-                  <p className="text-xs text-text-tertiary mt-1">
-                    {exercise.sets} séries × {exercise.reps} reps · meta{" "}
-                    {exercise.currentWeight || "—"} kg
-                  </p>
-                </div>
-                <Accordion title="Histórico">
+          exercises.map((exercise, index) => {
+            const history = groupedHistoryByExercise[exercise.id] || [];
+            const lastSession = history[0];
+            const hasPR = history.length > 0 && isPRSession(history, 0);
+            const sparkValues = history
+              .slice(0, 5)
+              .map((s) => s.bestWeight || 0)
+              .reverse();
+
+            return (
+              <motion.div
+                key={exercise.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: index * 0.05,
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25,
+                }}
+                className="gpu-accelerated"
+              >
+                <Card className="p-4 touch-feedback">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-bold text-text-primary">
+                        {exercise.name}
+                      </h3>
+                      <p className="text-xs text-text-tertiary mt-1">
+                        {exercise.sets} séries × {exercise.reps} reps · meta{" "}
+                        {exercise.currentWeight || "—"} kg
+                      </p>
+                    </div>
+                    {hasPR && (
+                      <span className="shrink-0 text-[11px] font-extrabold text-secondary bg-secondaryDim px-2.5 py-1 rounded-full">
+                        PR
+                      </span>
+                    )}
+                  </div>
+                  {sparkValues.length > 1 && (
+                    <div className="mb-2">
+                      <Sparkline values={sparkValues} active={hasPR} />
+                    </div>
+                  )}
+                  {lastSession && (
+                    <p className="text-xs text-text-tertiary mb-3">
+                      Último:{" "}
+                      <span className="font-bold text-text-primary tabular-nums">
+                        {lastSession.bestWeight != null
+                          ? `${lastSession.bestWeight}kg`
+                          : "—"}{" "}
+                        × {lastSession.bestReps || "—"}
+                      </span>
+                    </p>
+                  )}
+                  <Accordion title="Histórico">
                   <div className="space-y-2">
-                    {groupedHistoryByExercise[exercise.id]?.length > 0 ? (
-                      groupedHistoryByExercise[exercise.id].map((session) => {
-                        const prevSession =
-                          groupedHistoryByExercise[exercise.id][
-                            groupedHistoryByExercise[exercise.id].indexOf(
-                              session,
-                            ) + 1
-                          ];
-                        const isPR =
-                          !prevSession ||
-                          (session.bestWeight || 0) >
-                            (prevSession.bestWeight || 0) ||
-                          ((session.bestWeight || 0) ===
-                            (prevSession.bestWeight || 0) &&
-                            (session.bestReps || 0) >
-                              (prevSession.bestReps || 0));
+                    {history.length > 0 ? (
+                      history.map((session, sessionIndex) => {
+                        const isPR = isPRSession(history, sessionIndex);
 
                         return (
                           <div
@@ -231,7 +263,7 @@ const WorkoutView = () => {
                                 : "—"}{" "}
                               × {session.bestReps || "—"}
                               {isPR && (
-                                <span className="ml-2 text-accent">🔥</span>
+                                <span className="ml-2 text-secondary">🔥</span>
                               )}
                             </span>
                           </div>
@@ -244,9 +276,10 @@ const WorkoutView = () => {
                     )}
                   </div>
                 </Accordion>
-              </Card>
-            </motion.div>
-          ))
+                </Card>
+              </motion.div>
+            );
+          })
         )}
       </div>
     </Container>

@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { getSessions } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
+import WeekBarChart from "../components/WeekBarChart";
 import { motion } from "framer-motion";
 import {
   computeStreak,
@@ -123,6 +124,25 @@ const Progress = () => {
               treinos concluídos
             </span>
           </p>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          delay: 0.25,
+          type: "spring",
+          stiffness: 400,
+          damping: 25,
+        }}
+        className="mb-6"
+      >
+        <Card className="p-4">
+          <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold mb-3">
+            Últimos 7 dias
+          </p>
+          <WeekBarChart sessions={sessions} />
         </Card>
       </motion.div>
 

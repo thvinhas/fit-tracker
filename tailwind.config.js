@@ -4,52 +4,46 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Premium dark-first palette
-        background: "#000000",
-        surface: "#050505",
-        surface2: "#0a0a0a",
-        surface3: "#111111",
-        surface4: "#1a1a1a",
+        // Warm charcoal palette with golden accent
+        background: "#0d0d0c",
+        surface: "#0d0d0c",
+        surface2: "#151512",
+        surface3: "#151512",
+        surface4: "#1d1c19",
 
-        // Primary - vibrant green with premium glow
-        primary: "#00ff88",
-        primaryGlow: "#00ff88",
-        primaryDark: "#00cc6a",
-        primaryDim: "rgba(0, 255, 136, 0.15)",
+        // Primary - golden accent
+        primary: "#f2b134",
+        primaryGlow: "#f2b134",
+        primaryDark: "#c98d1c",
+        primaryDim: "rgba(242, 177, 52, 0.15)",
 
-        // Accent - energetic orange for PRs and highlights
-        accent: "#ff6b35",
-        accentGlow: "#ff6b35",
-        accentDim: "rgba(255, 107, 53, 0.15)",
+        // Secondary - teal for data / PR highlights
+        secondary: "#34c7b0",
+        secondaryDim: "rgba(52, 199, 176, 0.12)",
+
+        // Danger - soft red for destructive actions
+        danger: "#e5484d",
+        dangerDim: "rgba(229, 72, 77, 0.12)",
 
         // Text hierarchy - strong contrast
         text: {
-          primary: "#ffffff",
-          secondary: "#e5e5e5",
-          tertiary: "#a3a3a3",
-          muted: "#737373",
+          primary: "#f5f3ef",
+          secondary: "#e5e2dc",
+          tertiary: "#b8b4ac",
+          muted: "#7a766d",
           subtle: "#525252",
         },
 
         // Borders - minimal and subtle
         border: {
-          subtle: "rgba(255, 255, 255, 0.04)",
+          subtle: "rgba(255, 255, 255, 0.06)",
           DEFAULT: "rgba(255, 255, 255, 0.08)",
           hover: "rgba(255, 255, 255, 0.12)",
-          accent: "rgba(0, 255, 136, 0.3)",
+          accent: "rgba(242, 177, 52, 0.3)",
         },
       },
       fontFamily: {
-        sans: [
-          "SF Pro Display",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "Roboto",
-          "Helvetica Neue",
-          "Arial",
-          "sans-serif",
-        ],
+        sans: ["Manrope", "-apple-system", "sans-serif"],
       },
       fontSize: {
         // Tighter, more compact typography
@@ -92,13 +86,11 @@ export default {
       },
       boxShadow: {
         // Premium glow effects
-        "glow-xs": "0 0 12px rgba(0, 255, 120, 0.25)",
-        "glow-sm": "0 0 12px rgba(0, 255, 120, 0.25)",
-        glow: "0 0 32px -8px rgba(0, 255, 120, 0.3)",
-        "glow-lg": "0 0 48px -12px rgba(0, 255, 120, 0.35)",
-        "glow-xl": "0 0 64px -16px rgba(0, 255, 120, 0.4)",
-        "glow-accent": "0 0 24px -6px rgba(255, 107, 53, 0.5)",
-        "glow-accent-lg": "0 0 40px -10px rgba(255, 107, 53, 0.6)",
+        "glow-xs": "0 0 12px rgba(242, 177, 52, 0.2)",
+        "glow-sm": "0 0 12px rgba(242, 177, 52, 0.2)",
+        glow: "0 0 32px -8px rgba(242, 177, 52, 0.3)",
+        "glow-lg": "0 0 48px -12px rgba(242, 177, 52, 0.35)",
+        "glow-xl": "0 0 64px -16px rgba(242, 177, 52, 0.4)",
         "inner-glow": "inset 0 1px 0 0 rgba(255, 255, 255, 0.06)",
         "inner-glow-strong": "inset 0 2px 0 0 rgba(255, 255, 255, 0.1)",
         surface: "0 2px 16px -4px rgba(0, 0, 0, 0.6)",
@@ -142,8 +134,7 @@ export default {
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-primary": "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
-        "gradient-accent": "linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%)",
+        "gradient-primary": "linear-gradient(135deg, #f2b134 0%, #c98d1c 100%)",
         "gradient-surface":
           "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%)",
         "gradient-surface-strong":
