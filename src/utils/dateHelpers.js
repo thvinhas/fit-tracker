@@ -46,6 +46,14 @@ export const sessionsThisWeek = (logs) => {
   return logs.filter((log) => getLogTimestampMs(log) >= weekAgo).length;
 };
 
+export const weeklyVolume = (logs) => {
+  const now = Date.now();
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  return logs
+    .filter((log) => getLogTimestampMs(log) >= weekAgo)
+    .reduce((sum, log) => sum + (log.totalVolume || 0), 0);
+};
+
 export const sortLogsByDateDesc = (logs) => {
   return [...logs].sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a));
 };

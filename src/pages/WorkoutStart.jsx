@@ -497,7 +497,7 @@ const WorkoutStart = () => {
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="fixed top-4 left-4 right-4 z-50 max-w-lg mx-auto"
           >
-            <div className="bg-gradient-primary text-black rounded-2xl p-4 shadow-glow-lg flex items-center gap-4">
+            <div className="bg-primary text-[#181510] rounded-2xl p-4 shadow-glow-lg flex items-center gap-4">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -690,6 +690,11 @@ const WorkoutStart = () => {
                         className="border-t border-border-subtle"
                       >
                         <div className="p-2 space-y-1">
+                          {lastLabel && (
+                            <p className="px-2 pb-1 text-[11px] font-semibold text-text-tertiary tabular-nums">
+                              {lastLabel}
+                            </p>
+                          )}
                           {rows.map((row, setIndex) => {
                             const setActive =
                               activeSetId === `${exercise.id}-${setIndex}`;
