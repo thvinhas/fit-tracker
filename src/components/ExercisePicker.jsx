@@ -3,7 +3,14 @@ import { getExerciseLibrary } from "../services/firestore";
 
 const MAX_SUGGESTIONS = 8;
 
-const ExercisePicker = ({ label, value, onChange, onSelect, placeholder }) => {
+const ExercisePicker = ({
+  label,
+  value,
+  onChange,
+  onSelect,
+  placeholder,
+  size = "md",
+}) => {
   const [library, setLibrary] = useState(null);
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
@@ -35,10 +42,16 @@ const ExercisePicker = ({ label, value, onChange, onSelect, placeholder }) => {
     setOpen(false);
   };
 
+  const inputSizeClass =
+    size === "lg" ? "px-5 py-4 text-lg font-semibold" : "px-4 py-3.5 text-base";
+  const labelSizeClass = size === "lg" ? "text-sm mb-2.5" : "text-xs mb-2";
+
   return (
     <div className="w-full relative" ref={containerRef}>
       {label && (
-        <label className="block text-xs font-bold text-text-muted mb-2 uppercase tracking-wider">
+        <label
+          className={`block font-bold text-text-muted uppercase tracking-wider ${labelSizeClass}`}
+        >
           {label}
         </label>
       )}
@@ -52,10 +65,10 @@ const ExercisePicker = ({ label, value, onChange, onSelect, placeholder }) => {
         onFocus={() => setOpen(true)}
         placeholder={placeholder}
         required
-        className="w-full px-4 py-3.5 rounded-2xl border transition-all duration-300
+        className={`w-full rounded-2xl border transition-all duration-300
           bg-surface2 text-text-primary placeholder:text-text-muted
           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50
-          border-border-subtle hover:border-border-hover"
+          border-border-subtle hover:border-border-hover ${inputSizeClass}`}
       />
       {open && suggestions.length > 0 && (
         <div className="absolute z-20 mt-2 w-full rounded-2xl border border-border-subtle bg-surface2 shadow-lg overflow-hidden">
