@@ -186,17 +186,18 @@ const WorkoutStart = () => {
   }, [id, user]);
 
   useEffect(() => {
-    const firstExercise = exercises[0];
-    if (!firstExercise) return;
+    if (exercises.length === 0) return;
 
     let isMounted = true;
     fetch("/api/warmup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        exerciseName: firstExercise.name,
-        equipment: firstExercise.device,
-        targetWeight: firstExercise.currentWeight,
+        exercises: exercises.map((e) => ({
+          name: e.name,
+          device: e.device,
+          currentWeight: e.currentWeight,
+        })),
       }),
     })
       .then((res) => (res.ok ? res.json() : null))
