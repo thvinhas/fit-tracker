@@ -91,16 +91,16 @@ const Dashboard = () => {
   const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;
 
-    const todaysSessions = sessions.filter(
-      (session) => getLocalDayKey(getLogTimestampMs(session)) === todayKey,
-    );
-    const completedTodayIds = todaysSessions.map(
-      (session) => session.workoutId,
-    );
+    const lastSession = sessions[0];
+    if (!lastSession) return workouts[0];
 
-    const next = workouts.find((w) => !completedTodayIds.includes(w.id));
-    return next || workouts[0];
-  }, [workouts, sessions, todayKey]);
+    const lastIndex = workouts.findIndex(
+      (w) => w.id === lastSession.workoutId,
+    );
+    if (lastIndex === -1) return workouts[0];
+
+    return workouts[(lastIndex + 1) % workouts.length];
+  }, [workouts, sessions]);
 
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const weekCount = useMemo(() => sessionsThisWeek(sessions), [sessions]);
