@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import Container from "../components/Container";
 import Button, { buttonGhostLinkClass } from "../components/Button";
 import Input from "../components/Input";
+import ExercisePicker from "../components/ExercisePicker";
 import Card from "../components/Card";
 
 const WorkoutForm = () => {
@@ -117,6 +118,7 @@ const WorkoutForm = () => {
             sets: exercise.sets,
             reps: exercise.reps,
             currentWeight: exercise.currentWeight,
+            gifUrl: exercise.gifUrl ?? null,
             order: index,
             createdAt: new Date(),
           }),
@@ -265,14 +267,21 @@ const WorkoutForm = () => {
                   )}
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <Input
+                  <ExercisePicker
                     label="Nome do exercício"
-                    type="text"
                     value={exercise.name}
-                    onChange={(e) =>
-                      handleExerciseChange(index, "name", e.target.value)
+                    onChange={(value) =>
+                      handleExerciseChange(index, "name", value)
                     }
-                    required
+                    onSelect={(picked) => {
+                      handleExerciseChange(index, "name", picked.name);
+                      handleExerciseChange(
+                        index,
+                        "device",
+                        picked.equipment ?? exercise.device,
+                      );
+                      handleExerciseChange(index, "gifUrl", picked.gifUrl);
+                    }}
                     placeholder="Ex: Supino Reto"
                   />
                   <Input

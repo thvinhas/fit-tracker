@@ -694,6 +694,14 @@ const WorkoutStart = () => {
                         className="border-t border-border-subtle"
                       >
                         <div className="p-2 space-y-1">
+                          {exercise.gifUrl && (
+                            <img
+                              src={exercise.gifUrl}
+                              alt={exercise.name}
+                              className="w-full max-w-[220px] mx-auto rounded-lg mb-2"
+                              loading="lazy"
+                            />
+                          )}
                           {lastLabel && (
                             <p className="px-2 pb-1 text-[11px] font-semibold text-text-tertiary tabular-nums">
                               {lastLabel}

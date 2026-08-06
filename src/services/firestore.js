@@ -69,6 +69,20 @@ export const deleteExercise = async (id) => {
   return await deleteDoc(doc(db, "exercises", id));
 };
 
+// Exercise Library (shared catalog, read-only, seeded via
+// scripts/import-exercise-library.js)
+let exerciseLibraryCache = null;
+
+export const getExerciseLibrary = async () => {
+  if (exerciseLibraryCache) return exerciseLibraryCache;
+  const snapshot = await getDocs(collection(db, "exerciseLibrary"));
+  exerciseLibraryCache = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  return exerciseLibraryCache;
+};
+
 // Workout Logs
 export const getWorkoutLogs = async (userId) => {
   const q = query(

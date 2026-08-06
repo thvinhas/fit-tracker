@@ -15,6 +15,9 @@ dist-ssr
 # Environment variables
 .env
 
+# Firebase service account (used only by scripts/import-exercise-library.js)
+scripts/serviceAccountKey.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
