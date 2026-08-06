@@ -1,11 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const RestTimer = ({ isActive, onComplete, duration = 90, onDismiss }) => {
+const RestTimer = ({
+  isActive,
+  onComplete,
+  duration = 90,
+  onDismiss,
+  startMinimized = false,
+}) => {
   const [timeLeft, setTimeLeft] = useState(duration);
   const [isPaused, setIsPaused] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(startMinimized);
   const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (isActive) {
+      setTimeLeft(duration);
+      setIsPaused(false);
+      setIsMinimized(startMinimized);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
 
   useEffect(() => {
     if (!isActive || isPaused) {
@@ -62,57 +77,58 @@ const RestTimer = ({ isActive, onComplete, duration = 90, onDismiss }) => {
   if (isMinimized) {
     return (
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="fixed bottom-20 left-4 right-4 z-50"
+        initial={{ scale: 0.9, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="fixed bottom-24 left-4 right-4 z-40 max-w-lg mx-auto"
       >
-        <div className="bg-surface2 border border-border-subtle rounded-xl p-3 shadow-surface-lg flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="relative w-10 h-10">
-              <svg className="w-10 h-10 -rotate-90" viewBox="0 0 100 100">
+        <div className="bg-surface2 border border-border-subtle rounded-2xl px-3.5 py-2.5 shadow-surface-lg flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="relative w-9 h-9 shrink-0">
+              <svg className="w-9 h-9 -rotate-90" viewBox="0 0 100 100">
                 <circle
                   cx="50"
                   cy="50"
                   r="45"
                   fill="none"
                   stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="5"
+                  strokeWidth="8"
                 />
                 <circle
                   cx="50"
                   cy="50"
                   r="45"
                   fill="none"
-                  stroke="#00ff88"
-                  strokeWidth="5"
+                  stroke="#f2b134"
+                  strokeWidth="8"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   className="transition-all duration-1000 ease-linear"
-                  style={{
-                    filter: "drop-shadow(0 0 4px rgba(0, 255, 136, 0.4))",
-                  }}
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary tabular-nums">
+              <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-primary tabular-nums">
                 {formatTime(timeLeft)}
               </span>
             </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                Rest
-              </p>
-              <p className="text-xs font-semibold text-text-primary">
-                Descanso
-              </p>
-            </div>
+            <p className="text-xs font-semibold text-text-primary">
+              Descanso
+            </p>
           </div>
-          <button
-            onClick={() => setIsMinimized(false)}
-            className="px-3 py-1.5 rounded-lg bg-surface3 text-text-tertiary text-xs font-semibold hover:bg-surface4 transition-colors"
-          >
-            Expandir
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleAddTime}
+              className="px-2.5 py-1.5 rounded-lg bg-white/6 text-text-tertiary text-[11px] font-bold hover:bg-white/10 transition-colors"
+            >
+              +30s
+            </button>
+            <button
+              onClick={handleSkip}
+              className="px-2.5 py-1.5 rounded-lg bg-white/6 text-text-tertiary text-[11px] font-bold hover:bg-white/10 transition-colors"
+            >
+              Pular
+            </button>
+          </div>
         </div>
       </motion.div>
     );
@@ -178,14 +194,14 @@ const RestTimer = ({ isActive, onComplete, duration = 90, onDismiss }) => {
                   cy="50"
                   r="45"
                   fill="none"
-                  stroke="#00ff88"
+                  stroke="#f2b134"
                   strokeWidth="3"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   className="transition-all duration-1000 ease-linear"
                   style={{
-                    filter: "drop-shadow(0 0 8px rgba(0, 255, 136, 0.5))",
+                    filter: "drop-shadow(0 0 8px rgba(242, 177, 52, 0.5))",
                   }}
                 />
               </svg>

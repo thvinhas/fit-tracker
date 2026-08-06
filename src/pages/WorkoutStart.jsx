@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import Button, { buttonGhostLinkClass } from "../components/Button";
+import RestTimer from "../components/RestTimer";
 
 const REP_OPTIONS = [6, 8, 10, 12, 15];
 
@@ -111,8 +112,9 @@ const WorkoutStart = () => {
   const [repSelectorOpen, setRepSelectorOpen] = useState(null);
   const [repSelectorPosition, setRepSelectorPosition] = useState(null);
   const repSelectorRef = useRef(null);
-  // const [restTimerActive, setRestTimerActive] = useState(false);
-  // const [restTimerDuration, setRestTimerDuration] = useState(90);
+  const [restTimerActive, setRestTimerActive] = useState(false);
+  const [restTimerDuration, setRestTimerDuration] = useState(90);
+  const [warmupSuggestion, setWarmupSuggestion] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
@@ -183,6 +185,33 @@ const WorkoutStart = () => {
     };
   }, [id, user]);
 
+  useEffect(() => {
+    const firstExercise = exercises[0];
+    if (!firstExercise) return;
+
+    let isMounted = true;
+    fetch("/api/warmup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        exerciseName: firstExercise.name,
+        equipment: firstExercise.device,
+        targetWeight: firstExercise.currentWeight,
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data?.suggestion) {
+          setWarmupSuggestion(data.suggestion);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [exercises]);
+
   const updateSet = useCallback(
     (exerciseId, setIndex, patch) => {
       setSetStates((prev) => {
@@ -217,14 +246,21 @@ const WorkoutStart = () => {
                 setTimeout(() => setPrAlert(null), 3000);
               }
 
-              // Auto-start rest timer
-              // setRestTimerActive(true);
-              // setRestTimerDuration(90);
-
               // Auto-advance to next incomplete set
               const nextSetIndex = exerciseSets.findIndex(
                 (r, i) => i > setIndex && !r.completed,
               );
+              const hasMoreWork =
+                nextSetIndex !== -1 ||
+                exercises.findIndex((e) => e.id === exerciseId) <
+                  exercises.length - 1;
+
+              // Auto-start rest timer, unless that was the very last set
+              if (hasMoreWork) {
+                setRestTimerDuration(90);
+                setRestTimerActive(true);
+              }
+
               if (nextSetIndex !== -1) {
                 setActiveSetId(`${exerciseId}-${nextSetIndex}`);
               } else {
@@ -451,23 +487,9 @@ const WorkoutStart = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [repSelectorOpen]);
 
-  const getNextIncompleteExercise = () => {
-    for (const exercise of exercises) {
-      const rows = setStates[exercise.id] || [];
-      if (rows.some((r) => !r.completed)) {
-        return exercise.id;
-      }
-    }
-    return null;
+  const handleRestTimerComplete = () => {
+    setRestTimerActive(false);
   };
-
-  // const handleRestTimerComplete = () => {
-  //   setRestTimerActive(false);
-  //   const nextExerciseId = getNextIncompleteExercise();
-  //   if (nextExerciseId) {
-  //     setExpandedExerciseId(nextExerciseId);
-  //   }
-  // };
 
   if (loading) {
     return (
@@ -485,12 +507,13 @@ const WorkoutStart = () => {
 
   return (
     <div className="pb-24 min-h-screen bg-background">
-      {/* <RestTimer
+      <RestTimer
         isActive={restTimerActive}
         duration={restTimerDuration}
+        startMinimized
         onComplete={handleRestTimerComplete}
         onDismiss={() => setRestTimerActive(false)}
-      /> */}
+      />
 
       <AnimatePresence>
         {prAlert && (
@@ -555,6 +578,30 @@ const WorkoutStart = () => {
           Foco. Intensidade. Progresso.
         </p>
       </div>
+
+      {completedCount === 0 && exercises[0] && (
+        <div className="px-4 mb-2">
+          <div className="rounded-2xl bg-secondaryDim border border-secondary/25 px-4 py-3.5 flex items-center gap-3">
+            <span className="text-xl shrink-0">🧘</span>
+            <div>
+              <p className="text-[13px] font-extrabold text-secondary">
+                Aquecimento sugerido
+              </p>
+              <p className="text-xs text-text-tertiary mt-0.5">
+                {warmupSuggestion || (
+                  <>
+                    2 séries leves de {exercises[0].name}
+                    {Number(exercises[0].currentWeight) > 0
+                      ? ` a ${Math.round(Number(exercises[0].currentWeight) * 0.4)}kg`
+                      : ""}{" "}
+                    antes de começar
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="px-4 space-y-2">
         {exercises.length === 0 ? (

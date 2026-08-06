@@ -6,10 +6,10 @@ const Checkbox = ({ label, checked, onChange, disabled = false }) => {
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="w-5 h-5 rounded-md border-white/20 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-5 h-5 rounded-md border-border-subtle bg-surface2 text-primary focus:ring-primary/50 focus:ring-offset-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       />
       <span
-        className={`text-sm font-medium ${disabled ? "text-zinc-600" : "text-zinc-300"}`}
+        className={`text-sm font-medium ${disabled ? "text-text-subtle" : "text-text-tertiary"}`}
       >
         {label}
       </span>

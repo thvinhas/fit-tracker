@@ -30,3 +30,5 @@ scripts/serviceAccountKey.json
 *.sw?
 SYSTEM_ANALYSIS.md
 src/pages/Dashboard.analysis.md
+.vercel
+.env*

@@ -181,12 +181,14 @@ const Workouts = () => {
             >
               <Card className="p-4">
                 <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <h4 className="text-base font-bold text-text-primary">
-                      {workout.name}
-                    </h4>
-                    <p className="text-sm text-text-muted">Ordem {index + 1}</p>
-                  </div>
+                  <h4 className="text-base font-bold text-text-primary">
+                    {workout.name}
+                  </h4>
+                  {!isReorderMode && (
+                    <span className="shrink-0 text-[11px] font-extrabold text-text-muted bg-white/5 px-2.5 py-1 rounded-full">
+                      {index + 1}
+                    </span>
+                  )}
                   {isReorderMode && (
                     <div className="flex gap-2">
                       <Button

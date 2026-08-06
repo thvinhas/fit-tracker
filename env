@@ -4,3 +4,8 @@ VITE_FIREBASE_AUTH_DOMAIN= "fittracker-fee91.firebaseapp.com"
 VITE_FIREBASE_PROJECT_ID= "fittracker-fee91"
 VITE_FIREBASE_STORAGE_BUCKET= "fittracker-fee91.firebasestorage.app"
 VITE_FIREBASE_MESSAGING_SENDER_ID= "834400635835"
+
+# Sugestão de aquecimento por IA (api/warmup.js) — chave gratuita em
+# https://aistudio.google.com/apikey. Sem VITE_ na frente: só a
+# serverless function lê isso, nunca vai pro bundle do client.
+GEMINI_API_KEY=

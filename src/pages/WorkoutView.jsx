@@ -190,6 +190,17 @@ const WorkoutView = () => {
               .map((s) => s.bestWeight || 0)
               .reverse();
 
+            const goalWeight = Number(exercise.currentWeight) || 0;
+            const estimated1RM =
+              lastSession?.bestWeight != null
+                ? Number(lastSession.bestWeight) *
+                  (1 + (Number(lastSession.bestReps) || 0) / 30)
+                : null;
+            const goalProgress =
+              goalWeight > 0 && estimated1RM != null
+                ? Math.min(100, Math.round((estimated1RM / goalWeight) * 100))
+                : null;
+
             return (
               <motion.div
                 key={exercise.id}
@@ -235,6 +246,22 @@ const WorkoutView = () => {
                         × {lastSession.bestReps || "—"}
                       </span>
                     </p>
+                  )}
+                  {goalProgress != null && (
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-text-muted mb-1.5">
+                        <span>Meta de carga (1RM est.)</span>
+                        <span className="text-text-primary tabular-nums">
+                          {goalProgress}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/6 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary to-secondary"
+                          style={{ width: `${goalProgress}%` }}
+                        />
+                      </div>
+                    </div>
                   )}
                   <Accordion title="Histórico">
                   <div className="space-y-2">
