@@ -208,12 +208,16 @@ const WorkoutStart = () => {
         if (res.ok && data?.suggestion) {
           setWarmupSuggestion(data.suggestion);
         } else {
-          setWarmupError(
-            data?.error || "Não foi possível gerar sugestão de aquecimento",
+          const message =
+            data?.error || "Não foi possível gerar sugestão de aquecimento";
+          console.error(
+            `[warmup] Falha ao carregar aquecimento (status ${res.status}): ${message}`,
           );
+          setWarmupError(message);
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("[warmup] Erro de rede ao chamar /api/warmup:", error);
         if (isMounted) {
           setWarmupError("Não foi possível gerar sugestão de aquecimento");
         }

@@ -11,10 +11,12 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
+    console.error("[warmup] GEMINI_API_KEY não configurada no ambiente");
     res.status(503).json({ error: "GEMINI_API_KEY não configurada" });
     return;
   }
   if (list.length === 0) {
+    console.error("[warmup] Nenhum exercício recebido no corpo da requisição", req.body);
     res.status(400).json({ error: "Nenhum exercício informado" });
     return;
   }
@@ -39,6 +41,10 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `[warmup] Gemini respondeu ${response.status} ${response.statusText}: ${errorBody}`,
+      );
       res.status(502).json({ error: "Falha ao gerar sugestão de aquecimento" });
       return;
     }
@@ -47,12 +53,17 @@ export default async function handler(req, res) {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (!text) {
+      console.error(
+        "[warmup] Gemini retornou sem texto de sugestão",
+        JSON.stringify(data),
+      );
       res.status(502).json({ error: "Resposta vazia da IA" });
       return;
     }
 
     res.status(200).json({ suggestion: text });
-  } catch {
+  } catch (error) {
+    console.error("[warmup] Erro inesperado ao chamar Gemini:", error);
     res.status(500).json({ error: "Erro ao gerar sugestão de aquecimento" });
   }
 }
