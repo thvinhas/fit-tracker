@@ -115,6 +115,7 @@ const WorkoutStart = () => {
   const [restTimerActive, setRestTimerActive] = useState(false);
   const [restTimerDuration, setRestTimerDuration] = useState(90);
   const [warmupSuggestion, setWarmupSuggestion] = useState(null);
+  const [warmupError, setWarmupError] = useState(null);
   const [gifModal, setGifModal] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
@@ -201,13 +202,22 @@ const WorkoutStart = () => {
         })),
       }),
     })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (isMounted && data?.suggestion) {
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!isMounted) return;
+        if (res.ok && data?.suggestion) {
           setWarmupSuggestion(data.suggestion);
+        } else {
+          setWarmupError(
+            data?.error || "Não foi possível gerar sugestão de aquecimento",
+          );
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (isMounted) {
+          setWarmupError("Não foi possível gerar sugestão de aquecimento");
+        }
+      });
 
     return () => {
       isMounted = false;
@@ -589,16 +599,12 @@ const WorkoutStart = () => {
               <p className="text-[13px] font-extrabold text-secondary">
                 Aquecimento sugerido
               </p>
-              <p className="text-xs text-text-tertiary mt-0.5">
-                {warmupSuggestion || (
-                  <>
-                    2 séries leves de {exercises[0].name}
-                    {Number(exercises[0].currentWeight) > 0
-                      ? ` a ${Math.round(Number(exercises[0].currentWeight) * 0.4)}kg`
-                      : ""}{" "}
-                    antes de começar
-                  </>
-                )}
+              <p
+                className={`text-xs mt-0.5 ${warmupError ? "text-danger" : "text-text-tertiary"}`}
+              >
+                {warmupSuggestion ||
+                  warmupError ||
+                  "Gerando sugestão de aquecimento..."}
               </p>
             </div>
           </div>

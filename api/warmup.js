@@ -1,16 +1,5 @@
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
 
-function buildFallback(exercises) {
-  const first = exercises?.[0];
-  if (!first) return "2 séries leves antes de começar";
-  const weight = Number(first.currentWeight) || 0;
-  const warmupWeight = weight > 0 ? Math.round(weight * 0.4) : null;
-  const name = first.name || "o primeiro exercício";
-  return warmupWeight
-    ? `2 séries leves de ${name} a ${warmupWeight}kg antes de começar`
-    : `2 séries leves de ${name} antes de começar`;
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -19,11 +8,14 @@ export default async function handler(req, res) {
 
   const { exercises } = req.body || {};
   const list = Array.isArray(exercises) ? exercises.filter((e) => e?.name) : [];
-  const fallback = buildFallback(list);
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || list.length === 0) {
-    res.status(200).json({ suggestion: fallback });
+  if (!apiKey) {
+    res.status(503).json({ error: "GEMINI_API_KEY não configurada" });
+    return;
+  }
+  if (list.length === 0) {
+    res.status(400).json({ error: "Nenhum exercício informado" });
     return;
   }
 
@@ -47,15 +39,20 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      res.status(200).json({ suggestion: fallback });
+      res.status(502).json({ error: "Falha ao gerar sugestão de aquecimento" });
       return;
     }
 
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
-    res.status(200).json({ suggestion: text || fallback });
+    if (!text) {
+      res.status(502).json({ error: "Resposta vazia da IA" });
+      return;
+    }
+
+    res.status(200).json({ suggestion: text });
   } catch {
-    res.status(200).json({ suggestion: fallback });
+    res.status(500).json({ error: "Erro ao gerar sugestão de aquecimento" });
   }
 }
