@@ -1,14 +1,25 @@
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
 
 function buildFallback(exercises) {
-  const first = exercises?.[0];
-  if (!first) return "2 séries leves antes de começar";
-  const weight = Number(first.currentWeight) || 0;
-  const warmupWeight = weight > 0 ? Math.round(weight * 0.4) : null;
-  const name = first.name || "o primeiro exercício";
-  return warmupWeight
-    ? `2 séries leves de ${name} a ${warmupWeight}kg antes de começar`
-    : `2 séries leves de ${name} antes de começar`;
+  const list = exercises || [];
+  if (list.length === 0) return "2 séries leves antes de começar";
+
+  if (list.length === 1) {
+    const first = list[0];
+    const weight = Number(first.currentWeight) || 0;
+    const warmupWeight = weight > 0 ? Math.round(weight * 0.4) : null;
+    const name = first.name || "o primeiro exercício";
+    return warmupWeight
+      ? `2 séries leves de ${name} a ${warmupWeight}kg antes de começar`
+      : `2 séries leves de ${name} antes de começar`;
+  }
+
+  const names = list.map((e) => e.name).filter(Boolean);
+  const preview =
+    names.length > 3
+      ? `${names.slice(0, 3).join(", ")} e mais ${names.length - 3}`
+      : names.join(", ");
+  return `5 minutos de mobilidade geral e 1 série leve de cada exercício (${preview}) antes de começar`;
 }
 
 export default async function handler(req, res) {
