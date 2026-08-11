@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       })
       .join(", ");
 
-    const prompt = `Este é o treino de hoje, nesta ordem, com o peso atual de cada exercício: ${exerciseList}. Sugira, em português do Brasil, uma única frase curta (máximo 30 palavras) de aquecimento mensurável e específico para os grupos musculares desses exercícios: use números concretos (séries, repetições e peso em kg ou tempo em minutos), calculando pesos de aquecimento como 40-50% do peso informado do exercício correspondente. Tom direto, estilo app de treino. Responda só com a frase, sem aspas nem markdown.`;
+    const prompt = `Este é o treino de hoje, nesta ordem, com o peso atual de cada exercício: ${exerciseList}. Sugira, em português do Brasil, uma única frase curta (máximo 35 palavras) de aquecimento mensurável e específico para os grupos musculares desses exercícios: use números concretos (séries, repetições e peso em kg ou tempo em minutos), calculando pesos de aquecimento como 40-50% do peso informado do exercício correspondente e citando o nome do exercício (ou variação leve dele) junto de cada peso sugerido, para não deixar ambíguo qual movimento fazer. Tom direto, estilo app de treino. Responda só com a frase, sem aspas nem markdown.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
