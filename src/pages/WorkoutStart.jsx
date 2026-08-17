@@ -13,6 +13,7 @@ import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import Button, { buttonGhostLinkClass } from "../components/Button";
 import RestTimer from "../components/RestTimer";
+import { iniciarTreino, fecharTreino } from "../services/workoutNotification";
 
 const REP_OPTIONS = [6, 8, 10, 12, 15];
 
@@ -119,6 +120,10 @@ const WorkoutStart = () => {
   const [gifModal, setGifModal] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+
+  useEffect(() => {
+    iniciarTreino();
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -411,6 +416,7 @@ const WorkoutStart = () => {
         date: new Date(),
       });
 
+      fecharTreino();
       toast.success("Treino concluído!");
       navigate(`/workout/${id}/completion`, { replace: true });
     } catch (error) {
