@@ -44,6 +44,7 @@ export default defineConfig({
         screenshots: [],
       },
       workbox: {
+        importScripts: ["sw-notifications.js"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         runtimeCaching: [
           {
