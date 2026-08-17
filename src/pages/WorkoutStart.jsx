@@ -504,7 +504,7 @@ const WorkoutStart = () => {
     const remaining = estimatedDurationMs - (Date.now() - sessionStartTime);
     const notify = () => {
       overrunNotifiedRef.current = true;
-      avisarTempoExcedido(Math.round(estimatedDurationMs / 60000));
+      avisarTempoExcedido();
     };
 
     if (remaining <= 0) {

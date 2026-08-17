@@ -25,14 +25,14 @@ export async function iniciarTreino() {
   }
 }
 
-export async function avisarTempoExcedido(estimatedMinutes) {
+export async function avisarTempoExcedido() {
   if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
   if (Notification.permission !== "granted") return;
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification("Treino passou do tempo estimado", {
-      body: `Já passou dos ~${estimatedMinutes} min estimados para esse treino`,
+    await registration.showNotification("Ainda treinando? 💪", {
+      body: "Seu treino continua ativo. Finalize quando terminar.",
       tag: OVERRUN_TAG,
       requireInteraction: true,
       silent: true,
