@@ -1,4 +1,5 @@
 const NOTIFICATION_TAG = "treino-ativo";
+const OVERRUN_TAG = "treino-atrasado";
 
 export async function iniciarTreino() {
   if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
@@ -24,15 +25,37 @@ export async function iniciarTreino() {
   }
 }
 
+export async function avisarTempoExcedido(estimatedMinutes) {
+  if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+  if (Notification.permission !== "granted") return;
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.showNotification("Treino passou do tempo estimado", {
+      body: `Já passou dos ~${estimatedMinutes} min estimados para esse treino`,
+      tag: OVERRUN_TAG,
+      requireInteraction: true,
+      silent: true,
+      icon: "/icons/ft-icon.png",
+    });
+  } catch (error) {
+    console.error(
+      "[workoutNotification] Falha ao avisar tempo excedido:",
+      error,
+    );
+  }
+}
+
 export async function fecharTreino() {
   if (!("serviceWorker" in navigator)) return;
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    const notifications = await registration.getNotifications({
-      tag: NOTIFICATION_TAG,
-    });
-    notifications.forEach((notification) => notification.close());
+    const [ativas, atrasadas] = await Promise.all([
+      registration.getNotifications({ tag: NOTIFICATION_TAG }),
+      registration.getNotifications({ tag: OVERRUN_TAG }),
+    ]);
+    [...ativas, ...atrasadas].forEach((notification) => notification.close());
   } catch (error) {
     console.error("[workoutNotification] Falha ao fechar notificação:", error);
   }
