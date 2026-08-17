@@ -8,12 +8,19 @@ import {
   addExerciseLog,
   getExerciseLogs,
   addSession,
+  getSessions,
 } from "../services/firestore";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import Button, { buttonGhostLinkClass } from "../components/Button";
 import RestTimer from "../components/RestTimer";
-import { iniciarTreino, fecharTreino } from "../services/workoutNotification";
+import {
+  iniciarTreino,
+  fecharTreino,
+  avisarTempoExcedido,
+} from "../services/workoutNotification";
+
+const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
 
 const REP_OPTIONS = [6, 8, 10, 12, 15];
 
@@ -120,10 +127,35 @@ const WorkoutStart = () => {
   const [gifModal, setGifModal] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [pastAvgDurationMs, setPastAvgDurationMs] = useState(null);
+  const overrunNotifiedRef = useRef(false);
 
   useEffect(() => {
     iniciarTreino();
   }, []);
+
+  useEffect(() => {
+    if (!id || !user) return;
+    let isMounted = true;
+
+    getSessions(user.uid)
+      .then((sessions) => {
+        if (!isMounted) return;
+        const pastSessions = sessions
+          .filter((s) => s.workoutId === id)
+          .slice(0, 5);
+        if (pastSessions.length === 0) return;
+        const avg =
+          pastSessions.reduce((sum, s) => sum + (Number(s.duration) || 0), 0) /
+          pastSessions.length;
+        if (avg > 0) setPastAvgDurationMs(avg);
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, user]);
 
   useEffect(() => {
     if (!user) {
@@ -460,6 +492,30 @@ const WorkoutStart = () => {
     }, 0);
   }, [exercises, setStates]);
 
+  const estimatedDurationMs = useMemo(() => {
+    if (pastAvgDurationMs != null) return pastAvgDurationMs;
+    if (totalSets === 0) return null;
+    return totalSets * FALLBACK_SECONDS_PER_SET * 1000;
+  }, [pastAvgDurationMs, totalSets]);
+
+  useEffect(() => {
+    if (!estimatedDurationMs || overrunNotifiedRef.current) return;
+
+    const remaining = estimatedDurationMs - (Date.now() - sessionStartTime);
+    const notify = () => {
+      overrunNotifiedRef.current = true;
+      avisarTempoExcedido();
+    };
+
+    if (remaining <= 0) {
+      notify();
+      return;
+    }
+
+    const timeoutId = setTimeout(notify, remaining);
+    return () => clearTimeout(timeoutId);
+  }, [estimatedDurationMs, sessionStartTime]);
+
   const totalExercises = exercises.length;
 
   const handleExerciseClick = (exerciseId) => {
@@ -599,6 +655,12 @@ const WorkoutStart = () => {
         <p className="text-xs text-text-tertiary">
           Foco. Intensidade. Progresso.
         </p>
+        {estimatedDurationMs != null && (
+          <p className="text-[11px] text-text-muted mt-1">
+            Estimativa: ~{Math.round(estimatedDurationMs / 60000)} min
+            {pastAvgDurationMs == null && " (baseado no nº de séries)"}
+          </p>
+        )}
       </div>
 
       {completedCount === 0 && exercises[0] && (
