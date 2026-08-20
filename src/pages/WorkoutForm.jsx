@@ -16,6 +16,7 @@ import Button, { buttonGhostLinkClass } from "../components/Button";
 import Input from "../components/Input";
 import ExercisePicker from "../components/ExercisePicker";
 import Card from "../components/Card";
+import { kgToLb } from "../utils/weight";
 
 const WorkoutForm = () => {
   const { id } = useParams();
@@ -316,19 +317,26 @@ const WorkoutForm = () => {
                     required
                     placeholder="Ex: 10"
                   />
-                  <Input
-                    label="Peso inicial (kg)"
-                    type="number"
-                    value={exercise.currentWeight}
-                    onChange={(e) =>
-                      handleExerciseChange(
-                        index,
-                        "currentWeight",
-                        e.target.value,
-                      )
-                    }
-                    placeholder="Ex: 80"
-                  />
+                  <div>
+                    <Input
+                      label="Peso inicial (kg)"
+                      type="number"
+                      value={exercise.currentWeight}
+                      onChange={(e) =>
+                        handleExerciseChange(
+                          index,
+                          "currentWeight",
+                          e.target.value,
+                        )
+                      }
+                      placeholder="Ex: 80"
+                    />
+                    {exercise.currentWeight ? (
+                      <p className="mt-1.5 text-[11px] text-text-muted">
+                        ≈ {kgToLb(exercise.currentWeight)} lb
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
                 {exercises.length > 1 && (
                   <div className="mt-4 flex justify-end">

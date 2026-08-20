@@ -19,6 +19,7 @@ import {
   fecharTreino,
   avisarTempoExcedido,
 } from "../services/workoutNotification";
+import { kgToLb } from "../utils/weight";
 
 const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
 
@@ -41,17 +42,24 @@ const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
       −
     </motion.button>
     <div className="min-w-[3rem] text-center px-1">
-      <motion.span
-        key={value}
-        initial={{ scale: 1.2, opacity: 0.5 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="text-[20px] font-bold tabular-nums text-text-primary leading-none"
-      >
-        {value}
-      </motion.span>
-      <span className="text-[12px] font-semibold text-text-muted ml-0.5 opacity-70">
-        {label}
-      </span>
+      <div>
+        <motion.span
+          key={value}
+          initial={{ scale: 1.2, opacity: 0.5 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-[20px] font-bold tabular-nums text-text-primary leading-none"
+        >
+          {value}
+        </motion.span>
+        <span className="text-[12px] font-semibold text-text-muted ml-0.5 opacity-70">
+          {label}
+        </span>
+      </div>
+      {label === "kg" && (
+        <span className="text-[10px] font-semibold text-text-muted opacity-60 tabular-nums">
+          ~{kgToLb(value)} lb
+        </span>
+      )}
     </div>
     <motion.button
       type="button"
