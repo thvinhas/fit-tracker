@@ -1,13 +1,85 @@
 # Fit Tracker
 
-Sistema web de gestão de treinos utilizando React, Firebase e Vercel.
+Sistema de gestão de treinos utilizando React, Firebase e Vercel. Roda como
+**web (PWA)** e como **app nativo para iPhone** (via Capacitor).
 
 ## Tecnologias
 
 - **Frontend**: React com Vite
 - **Backend**: Firebase (Auth + Firestore)
-- **Deploy**: Vercel
+- **Deploy**: Vercel (web) / App Store (iOS)
+- **App nativo**: Capacitor (iOS)
 - **UI**: Tailwind CSS
+
+## App para iPhone (Capacitor)
+
+O mesmo código React é empacotado em um app iOS nativo usando
+[Capacitor](https://capacitorjs.com/). O projeto Xcode nativo (`ios/`) é
+**gerado localmente** (não versionado) a partir da configuração
+`capacitor.config.json`.
+
+### Pré-requisitos
+
+- **macOS** com **Xcode** instalado (obrigatório para compilar iOS)
+- **CocoaPods** (`sudo gem install cocoapods`)
+- Uma conta no **Apple Developer** para rodar em dispositivo físico / publicar
+
+### Rodar no iPhone / simulador
+
+```bash
+npm install          # instala dependências (inclui Capacitor)
+npm run cap:add:ios  # gera o projeto Xcode em ios/ (uma vez)
+npm run ios          # build web + sync + abre o projeto no Xcode
+```
+
+No Xcode: selecione um simulador ou seu iPhone e clique em **Run** (▶).
+
+> Após `cap:add:ios`, trave o iPhone em retrato (opcional): em
+> `ios/App/App/Info.plist`, deixe apenas
+> `UIInterfaceOrientationPortrait` em `UISupportedInterfaceOrientations`.
+> Substitua também o ícone/splash placeholder pelos seus assets de marca.
+
+### Fluxo de desenvolvimento
+
+Sempre que alterar o código web, rebuilde e sincronize com o projeto iOS:
+
+```bash
+npm run cap:sync     # npm run build + cap sync ios
+```
+
+Scripts disponíveis:
+
+| Script | O que faz |
+| --- | --- |
+| `npm run ios` | build + sync + abre o Xcode |
+| `npm run cap:sync` | build web e copia para o projeto iOS |
+| `npm run cap:add:ios` | (re)adiciona a plataforma iOS |
+| `npm run cap:open:ios` | abre o projeto iOS no Xcode |
+
+### Recursos nativos integrados
+
+Configurados em `capacitor.config.json` e inicializados em `src/native.js`
+(que só age dentro do app; na web é no-op):
+
+- **Status Bar** com tema escuro sobreposto ao conteúdo
+- **Splash Screen** escondida automaticamente ao montar o app
+- **Keyboard** com ajuste de layout ao abrir o teclado
+- **Haptics** (feedback tátil) via `haptic()`
+- **App** (tratamento do botão/gesto de voltar)
+- Safe areas (notch e home indicator) já tratadas no CSS
+
+### Login com Google no app nativo
+
+O login por **email/senha** funciona nativamente sem configuração extra.
+
+O login com **Google** usa `signInWithRedirect`, que no webview nativo do
+iOS exige configuração adicional para funcionar de forma confiável:
+
+1. Adicionar o `GoogleService-Info.plist` do Firebase ao projeto Xcode
+2. Instalar o plugin `@capacitor-firebase/authentication`
+3. Registrar o URL scheme reverso do cliente OAuth no `Info.plist`
+
+Enquanto isso não for configurado, use o login por email/senha no app iOS.
 
 ## Funcionalidades
 
