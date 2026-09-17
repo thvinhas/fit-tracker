@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Capacitor: projeto nativo iOS gerado localmente com `npm run cap:add:ios`.
+# Assets binarios (icone/splash) e Pods nao vao para o repo; veja README.
+ios/
+
 # Environment variables
 .env
 
