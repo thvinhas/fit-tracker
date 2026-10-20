@@ -283,6 +283,11 @@ const WorkoutForm = () => {
                         picked.equipment ?? exercise.device,
                       );
                       handleExerciseChange(index, "gifUrl", picked.gifUrl);
+                      handleExerciseChange(
+                        index,
+                        "muscleGroup",
+                        picked.muscleGroup ?? null,
+                      );
                     }}
                     placeholder="Ex: Supino Reto"
                   />

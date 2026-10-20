@@ -254,7 +254,12 @@ const WorkoutView = () => {
                   {goalProgress != null && (
                     <div className="mb-3">
                       <div className="flex items-center justify-between text-[11px] font-bold text-text-muted mb-1.5">
-                        <span>Meta de carga (1RM est.)</span>
+                        <span>
+                          Meta de carga · 1RM est.{" "}
+                          <span className="text-text-primary">
+                            {Math.round(estimated1RM)}kg
+                          </span>
+                        </span>
                         <span className="text-text-primary tabular-nums">
                           {goalProgress}%
                         </span>

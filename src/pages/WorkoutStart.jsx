@@ -22,6 +22,7 @@ import {
 import { kgToLb } from "../utils/weight";
 
 const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
+const PROGRESSION_INCREMENT_KG = 2.5;
 
 const REP_OPTIONS = [6, 8, 10, 12, 15];
 
@@ -119,6 +120,7 @@ const WorkoutStart = () => {
   // offline storage removed — use direct Firestore calls
   const [exercises, setExercises] = useState([]);
   const [lastByExercise, setLastByExercise] = useState({});
+  const [progressionSuggestions, setProgressionSuggestions] = useState({});
   const [setStates, setSetStates] = useState({});
   const [loading, setLoading] = useState(true);
   const [sessionStartTime] = useState(() => Date.now());
@@ -186,6 +188,7 @@ const WorkoutStart = () => {
 
         const lastMap = {};
         const initialSets = {};
+        const suggestions = {};
 
         exercisesData.forEach((exercise, index) => {
           const logs = logsByExercise[index] || [];
@@ -205,11 +208,28 @@ const WorkoutStart = () => {
             reps: last?.reps != null ? Number(last.reps) : defaultReps,
             completed: false,
           }));
+
+          if (last?.sessionId) {
+            const lastSessionLogs = logs.filter(
+              (l) => l.sessionId === last.sessionId,
+            );
+            const targetReps = Number(exercise.reps) || 0;
+            const completedAllSets = lastSessionLogs.length >= n;
+            const metTargetReps =
+              targetReps > 0 &&
+              lastSessionLogs.every((l) => Number(l.reps) >= targetReps);
+
+            if (completedAllSets && metTargetReps) {
+              suggestions[exercise.id] =
+                defaultWeight + PROGRESSION_INCREMENT_KG;
+            }
+          }
         });
 
         if (!isMounted) return;
         setLastByExercise(lastMap);
         setSetStates(initialSets);
+        setProgressionSuggestions(suggestions);
 
         if (exercisesData.length > 0) {
           const firstExerciseId = exercisesData[0].id;
@@ -442,6 +462,7 @@ const WorkoutStart = () => {
             workoutId: id,
             sessionId,
             date: new Date(),
+            muscleGroup: exercise.muscleGroup || null,
           };
           exerciseLogs.push(addExerciseLog(logData));
         }
@@ -576,6 +597,24 @@ const WorkoutStart = () => {
   const handleRestTimerComplete = () => {
     setRestTimerActive(false);
   };
+
+  const applyProgressionSuggestion = useCallback((exerciseId, weight) => {
+    setSetStates((prev) => {
+      const rows = prev[exerciseId];
+      if (!rows) return prev;
+      return {
+        ...prev,
+        [exerciseId]: rows.map((row) =>
+          row.completed ? row : { ...row, weight },
+        ),
+      };
+    });
+    setProgressionSuggestions((prev) => {
+      const rest = { ...prev };
+      delete rest[exerciseId];
+      return rest;
+    });
+  }, []);
 
   if (loading) {
     return (
@@ -817,6 +856,27 @@ const WorkoutStart = () => {
                       </div>
                     </div>
                   </button>
+
+                  {!isComplete && progressionSuggestions[exercise.id] != null && (
+                    <div className="px-3 pb-2 -mt-1 flex items-center gap-2">
+                      <span className="text-[11px] font-semibold text-secondary bg-secondaryDim px-2.5 py-1 rounded-full">
+                        Sugestão: {progressionSuggestions[exercise.id]}kg (+
+                        {PROGRESSION_INCREMENT_KG}kg)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          applyProgressionSuggestion(
+                            exercise.id,
+                            progressionSuggestions[exercise.id],
+                          )
+                        }
+                        className="text-[11px] font-bold text-primary hover:underline"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  )}
 
                   {/* Expanded Sets - Compact Rows */}
                   <AnimatePresence>
