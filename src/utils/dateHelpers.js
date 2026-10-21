@@ -58,6 +58,15 @@ export const sortLogsByDateDesc = (logs) => {
   return [...logs].sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a));
 };
 
+export const formatDuration = (durationMs) => {
+  if (durationMs === null || durationMs === undefined) return "Incompleta";
+  const totalMinutes = Math.floor(durationMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}min`;
+  return `${hours}h ${String(minutes).padStart(2, "0")}min`;
+};
+
 export const formatRelativeDate = (timestampMs) => {
   const diff = Date.now() - timestampMs;
   const minutes = Math.floor(diff / 60000);

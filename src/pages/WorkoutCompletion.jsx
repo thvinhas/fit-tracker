@@ -6,6 +6,7 @@ import { getSessions } from "../services/firestore";
 import Button from "../components/Button";
 import Container from "../components/Container";
 import Card from "../components/Card";
+import { formatDuration } from "../utils/dateHelpers";
 
 const WorkoutCompletion = () => {
   const navigate = useNavigate();
@@ -37,12 +38,6 @@ const WorkoutCompletion = () => {
 
     loadSessionData();
   }, [user]);
-
-  const formatDuration = (ms) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
 
   const formatVolume = (volume) => {
     if (volume >= 1000) {
@@ -106,7 +101,7 @@ const WorkoutCompletion = () => {
                 Duração
               </p>
               <p className="text-2xl font-black text-primary tabular-nums">
-                {formatDuration(sessionData.duration || 0)}
+                {formatDuration(sessionData.duration)}
               </p>
             </Card>
             <Card className="p-4">

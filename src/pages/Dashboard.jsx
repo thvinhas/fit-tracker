@@ -17,6 +17,7 @@ import {
   sessionsThisWeek,
   formatRelativeDate,
   weeklyVolume,
+  formatDuration,
 } from "../utils/dateHelpers";
 
 const WEEKLY_GOAL = 5;
@@ -294,9 +295,7 @@ const Dashboard = () => {
                       </p>
                     </div>
                     <span className="shrink-0 text-[10px] font-bold uppercase px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/30">
-                      {session.duration
-                        ? `${Math.floor(session.duration / 60)} min`
-                        : "Feito"}
+                      {formatDuration(session.duration)}
                     </span>
                   </Card>
                 </Link>
