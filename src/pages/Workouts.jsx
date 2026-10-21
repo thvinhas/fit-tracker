@@ -14,6 +14,7 @@ import Button, {
   buttonPrimaryLinkClass,
   buttonSecondaryLinkClass,
 } from "../components/Button";
+import { ListSkeleton } from "../components/Skeleton";
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
@@ -144,9 +145,7 @@ const Workouts = () => {
       </motion.div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
-        </div>
+        <ListSkeleton rows={4} />
       ) : workouts.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

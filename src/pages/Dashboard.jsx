@@ -6,6 +6,7 @@ import { getSessions, getWorkouts } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import WeeklyRing from "../components/WeeklyRing";
+import { ListSkeleton } from "../components/Skeleton";
 import {
   buttonPrimaryLinkClass,
   buttonGhostLinkClass,
@@ -146,9 +147,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <Container title="Início" subtitle="Carregando seu espaço…">
-        <div className="flex justify-center py-16">
-          <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
-        </div>
+        <ListSkeleton rows={4} />
       </Container>
     );
   }

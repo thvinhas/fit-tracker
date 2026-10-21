@@ -4,6 +4,7 @@ import { getSessions, getSessionExerciseLogs } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import WeekBarChart from "../components/WeekBarChart";
+import { ListSkeleton } from "../components/Skeleton";
 import { motion } from "framer-motion";
 import {
   computeStreak,
@@ -71,9 +72,7 @@ const Progress = () => {
   if (authLoading || loading) {
     return (
       <Container title="Progresso" subtitle="Consistência e ritmo.">
-        <div className="flex justify-center py-16">
-          <div className="h-12 w-12 rounded-full border-3 border-primary/30 border-t-primary animate-spin" />
-        </div>
+        <ListSkeleton rows={4} />
       </Container>
     );
   }
