@@ -58,6 +58,16 @@ export const weeklyVolume = (logs) => {
     .reduce((sum, log) => sum + (log.totalVolume || 0), 0);
 };
 
+export const previousWeekVolume = (logs) => {
+  const now = Date.now();
+  return logs
+    .filter((log) => {
+      const ts = getLogTimestampMs(log);
+      return ts < now - WEEK_MS && ts >= now - 2 * WEEK_MS;
+    })
+    .reduce((sum, log) => sum + (log.totalVolume || 0), 0);
+};
+
 export const sortLogsByDateDesc = (logs) => {
   return [...logs].sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a));
 };

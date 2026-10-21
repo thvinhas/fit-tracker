@@ -17,6 +17,7 @@ import {
   sessionsThisWeek,
   formatRelativeDate,
   weeklyVolume,
+  previousWeekVolume,
   formatDuration,
   isWithinCurrentWeek,
 } from "../utils/dateHelpers";
@@ -105,6 +106,12 @@ const Dashboard = () => {
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const weekCount = useMemo(() => sessionsThisWeek(sessions), [sessions]);
   const volume = useMemo(() => weeklyVolume(sessions), [sessions]);
+  const prevVolume = useMemo(
+    () => previousWeekVolume(sessions),
+    [sessions],
+  );
+  const volumeChangePercent =
+    prevVolume > 0 ? Math.round(((volume - prevVolume) / prevVolume) * 100) : null;
   const firstName = (user?.displayName || user?.email || "").split(
     /[\s@]/,
   )[0];
@@ -186,10 +193,24 @@ const Dashboard = () => {
             <p className="text-[11px] uppercase tracking-wider text-text-muted font-bold">
               Volume 7d
             </p>
-            <p className="text-lg font-extrabold text-text-primary tabular-nums">
-              {(volume / 1000).toFixed(1)}
-              <span className="text-xs font-bold text-text-muted ml-1">t</span>
-            </p>
+            <div className="text-right">
+              <p className="text-lg font-extrabold text-text-primary tabular-nums">
+                {(volume / 1000).toFixed(1)}
+                <span className="text-xs font-bold text-text-muted ml-1">
+                  t
+                </span>
+              </p>
+              {volumeChangePercent != null && (
+                <p
+                  className={`text-[10px] font-bold tabular-nums ${
+                    volumeChangePercent >= 0 ? "text-primary" : "text-text-muted"
+                  }`}
+                >
+                  {volumeChangePercent >= 0 ? "+" : ""}
+                  {volumeChangePercent}% vs sem. anterior
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
