@@ -693,10 +693,19 @@ const WorkoutStart = () => {
                 Progresso
               </p>
               <p className="text-lg font-black text-primary tabular-nums tracking-tight">
-                {completedExercises}/{totalExercises}
+                {completedCount}/{totalSets}
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="h-1.5 rounded-full bg-white/6 overflow-hidden mb-3">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all"
+            style={{
+              width: `${totalSets > 0 ? Math.round((completedCount / totalSets) * 100) : 0}%`,
+            }}
+          />
         </div>
 
         <h1 className="text-xl font-black text-text-primary tracking-tight mb-1">
