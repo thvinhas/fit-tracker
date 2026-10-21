@@ -909,7 +909,7 @@ const WorkoutStart = () => {
                                             setActiveSetId(setKey);
                                           }
                                         }}
-                                        className={`flex h-9 w-9 items-center justify-center rounded-[12px] border transition-all duration-200 ${
+                                        className={`flex h-11 w-11 items-center justify-center rounded-[12px] border transition-all duration-200 ${
                                           row.completed
                                             ? "border-primary bg-primary text-black shadow-glow-sm"
                                             : setActive
