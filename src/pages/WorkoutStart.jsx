@@ -22,20 +22,11 @@ import {
 } from "../services/workoutNotification";
 import { pluralize } from "../utils/pluralize";
 import WeightDisplay from "../components/WeightDisplay";
-import { getEquipmentAbbreviation } from "../utils/equipment";
+import {
+  getEquipmentAbbreviation,
+  getProgressionIncrementKg,
+} from "../utils/equipment";
 import { estimateDurationMs } from "../utils/estimateDuration";
-
-const DEFAULT_INCREMENT_KG = 2.5;
-const INCREMENT_BY_DEVICE = [
-  { match: /halter|dumbbell|\bdb\b/i, incrementKg: 2 },
-  { match: /m[aá]quina|machine|\bmaq\b/i, incrementKg: 5 },
-  { match: /barra|barbell|\bbb\b/i, incrementKg: 2.5 },
-];
-
-const getProgressionIncrementKg = (device) => {
-  const found = INCREMENT_BY_DEVICE.find(({ match }) => match.test(device || ""));
-  return found ? found.incrementKg : DEFAULT_INCREMENT_KG;
-};
 
 const roundToRealisticWeight = (weightKg, incrementKg) =>
   Math.round(weightKg / incrementKg) * incrementKg;
@@ -205,7 +196,10 @@ const WorkoutStart = () => {
               lastSessionLogs.every((l) => Number(l.reps) >= targetReps);
 
             if (completedAllSets && metTargetReps) {
-              const incrementKg = getProgressionIncrementKg(exercise.equipment);
+              const incrementKg = getProgressionIncrementKg(
+                exercise.equipment,
+                exercise.device,
+              );
               suggestions[exercise.id] = roundToRealisticWeight(
                 defaultWeight + incrementKg,
                 incrementKg,
