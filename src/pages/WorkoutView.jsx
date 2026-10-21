@@ -6,6 +6,7 @@ import {
   getExercises,
   getExerciseLogs,
   getLastPerformance,
+  getProgram,
 } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
@@ -33,6 +34,7 @@ const isPRSession = (sortedSessions, index) => {
 const WorkoutView = () => {
   const { id } = useParams();
   const [workout, setWorkout] = useState(null);
+  const [program, setProgram] = useState(null);
   const [exercises, setExercises] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState({});
   const [lastPerformanceByExercise, setLastPerformanceByExercise] = useState(
@@ -48,6 +50,10 @@ const WorkoutView = () => {
           getExercises(id),
         ]);
         setWorkout(workoutData);
+        if (workoutData?.programId) {
+          const programData = await getProgram(workoutData.programId);
+          setProgram(programData);
+        }
         const logsPromises = exercisesData.map(async (exercise) => {
           const logs = await getExerciseLogs(exercise.id);
           return { exerciseId: exercise.id, logs };
@@ -135,7 +141,11 @@ const WorkoutView = () => {
   return (
     <Container
       title={workout?.name || "Plano"}
-      subtitle="Revisão rápida antes da sessão."
+      subtitle={
+        program?.status === "archived"
+          ? "Programa arquivado · só consulta"
+          : "Revisão rápida antes da sessão."
+      }
     >
       <Link
         to="/workouts"
@@ -144,19 +154,21 @@ const WorkoutView = () => {
         ← Treinos
       </Link>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="gpu-accelerated"
-      >
-        <Link
-          to={`/workout/${id}/start`}
-          className={`${buttonPrimaryLinkClass} mb-8 touch-feedback min-h-[48px] flex items-center justify-center`}
+      {program?.status !== "archived" && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="gpu-accelerated"
         >
-          Começar treino
-        </Link>
-      </motion.div>
+          <Link
+            to={`/workout/${id}/start`}
+            className={`${buttonPrimaryLinkClass} mb-8 touch-feedback min-h-[48px] flex items-center justify-center`}
+          >
+            Começar treino
+          </Link>
+        </motion.div>
+      )}
 
       <div className="space-y-3 smooth-scroll">
         {exercises.length === 0 ? (
