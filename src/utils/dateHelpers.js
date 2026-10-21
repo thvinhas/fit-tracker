@@ -44,8 +44,22 @@ export const computeStreak = (logs) => {
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-export const isWithinCurrentWeek = (timestampMs) =>
-  Date.now() - timestampMs < WEEK_MS;
+// Calendar week, Monday 00:00 (local time) through Sunday end-of-day —
+// matches the "semana atual" the weekly goal ring and plan status talk about,
+// instead of a rolling "last 7 days" window.
+export const getWeekStartMs = (timestampMs = Date.now()) => {
+  const date = new Date(timestampMs);
+  date.setHours(0, 0, 0, 0);
+  const dayIndex = date.getDay(); // 0 = Sunday ... 6 = Saturday
+  const daysSinceMonday = (dayIndex + 6) % 7;
+  date.setDate(date.getDate() - daysSinceMonday);
+  return date.getTime();
+};
+
+export const isWithinCurrentWeek = (timestampMs) => {
+  const start = getWeekStartMs();
+  return timestampMs >= start && timestampMs < start + WEEK_MS;
+};
 
 export const sessionsThisWeek = (logs) => {
   return logs.filter((log) => isWithinCurrentWeek(getLogTimestampMs(log)))
@@ -59,11 +73,12 @@ export const weeklyVolume = (logs) => {
 };
 
 export const previousWeekVolume = (logs) => {
-  const now = Date.now();
+  const currentStart = getWeekStartMs();
+  const previousStart = currentStart - WEEK_MS;
   return logs
     .filter((log) => {
       const ts = getLogTimestampMs(log);
-      return ts < now - WEEK_MS && ts >= now - 2 * WEEK_MS;
+      return ts >= previousStart && ts < currentStart;
     })
     .reduce((sum, log) => sum + (log.totalVolume || 0), 0);
 };
