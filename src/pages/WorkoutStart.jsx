@@ -29,6 +29,14 @@ const REP_OPTIONS = [6, 8, 10, 12, 15];
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
+const getFallbackWarmup = (exercise) => {
+  const workingWeight = Number(exercise?.currentWeight) || 0;
+  if (workingWeight <= 0) return "Barra vazia × 10, 50% × 8, 70% × 5";
+  const half = Math.round(workingWeight * 0.5);
+  const seventy = Math.round(workingWeight * 0.7);
+  return `Barra vazia × 10, ${half}kg × 8, ${seventy}kg × 5`;
+};
+
 // Compact weight stepper - much smaller with premium motion
 const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
   <div className="flex items-center gap-1">
@@ -134,7 +142,6 @@ const WorkoutStart = () => {
   const [restTimerActive, setRestTimerActive] = useState(false);
   const [restTimerDuration, setRestTimerDuration] = useState(90);
   const [warmupSuggestion, setWarmupSuggestion] = useState(null);
-  const [warmupError, setWarmupError] = useState(null);
   const [gifModal, setGifModal] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
@@ -275,19 +282,13 @@ const WorkoutStart = () => {
         if (res.ok && data?.suggestion) {
           setWarmupSuggestion(data.suggestion);
         } else {
-          const message =
-            data?.error || "Não foi possível gerar sugestão de aquecimento";
           console.error(
-            `[warmup] Falha ao carregar aquecimento (status ${res.status}): ${message}`,
+            `[warmup] Falha ao carregar aquecimento (status ${res.status}): ${data?.error || "resposta vazia"}`,
           );
-          setWarmupError(message);
         }
       })
       .catch((error) => {
         console.error("[warmup] Erro de rede ao chamar /api/warmup:", error);
-        if (isMounted) {
-          setWarmupError("Não foi possível gerar sugestão de aquecimento");
-        }
       });
 
     return () => {
@@ -720,12 +721,8 @@ const WorkoutStart = () => {
               <p className="text-[13px] font-extrabold text-secondary">
                 Aquecimento sugerido
               </p>
-              <p
-                className={`text-xs mt-0.5 ${warmupError ? "text-danger" : "text-text-tertiary"}`}
-              >
-                {warmupSuggestion ||
-                  warmupError ||
-                  "Gerando sugestão de aquecimento..."}
+              <p className="text-xs mt-0.5 text-text-tertiary">
+                {warmupSuggestion || getFallbackWarmup(exercises[0])}
               </p>
             </div>
           </div>
