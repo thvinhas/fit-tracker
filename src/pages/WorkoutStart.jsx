@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getExercises,
@@ -27,6 +27,7 @@ import {
   getProgressionIncrementKg,
 } from "../utils/equipment";
 import { estimateDurationMs } from "../utils/estimateDuration";
+import { useWorkoutPersistence } from "../hooks/useWorkoutPersistence";
 
 const roundToRealisticWeight = (weightKg, incrementKg) =>
   Math.round(weightKg / incrementKg) * incrementKg;
@@ -100,7 +101,7 @@ const WorkoutStart = () => {
   const [progressionSuggestions, setProgressionSuggestions] = useState({});
   const [setStates, setSetStates] = useState({});
   const [loading, setLoading] = useState(true);
-  const [sessionStartTime] = useState(() => Date.now());
+  const [sessionStartTime, setSessionStartTime] = useState(() => Date.now());
   const [prAlert, setPrAlert] = useState(null);
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
   const [activeSetId, setActiveSetId] = useState(null);
@@ -110,9 +111,35 @@ const WorkoutStart = () => {
   const [gifModal, setGifModal] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [pastAvgDurationMs, setPastAvgDurationMs] = useState(null);
   const sessionHadPRRef = useRef(false);
   const overrunNotifiedRef = useRef(false);
+
+  const applyRestoredState = useCallback((saved) => {
+    if (!saved || saved.workoutId !== id) return;
+    if (saved.setStates) setSetStates(saved.setStates);
+    if (saved.expandedExerciseId !== undefined) {
+      setExpandedExerciseId(saved.expandedExerciseId);
+    }
+    if (saved.activeSetId !== undefined) setActiveSetId(saved.activeSetId);
+    if (saved.sessionStartTime) setSessionStartTime(saved.sessionStartTime);
+  }, [id]);
+
+  const persistedState = useMemo(
+    () => ({
+      workoutId: id,
+      setStates,
+      expandedExerciseId,
+      activeSetId,
+      sessionStartTime,
+    }),
+    [id, setStates, expandedExerciseId, activeSetId, sessionStartTime],
+  );
+
+  const { clearState: clearPersistedState, loadState: loadPersistedState } =
+    useWorkoutPersistence(persistedState, applyRestoredState);
 
   useEffect(() => {
     iniciarTreino();
@@ -210,13 +237,31 @@ const WorkoutStart = () => {
 
         if (!isMounted) return;
         setLastByExercise(lastMap);
-        setSetStates(initialSets);
         setProgressionSuggestions(suggestions);
 
-        if (exercisesData.length > 0) {
-          const firstExerciseId = exercisesData[0].id;
-          setExpandedExerciseId(firstExerciseId);
-          setActiveSetId(`${firstExerciseId}-0`);
+        const saved = loadPersistedState();
+        if (saved && saved.workoutId === id && saved.setStates) {
+          setSetStates(
+            exercisesData.reduce((acc, exercise) => {
+              acc[exercise.id] =
+                saved.setStates[exercise.id] || initialSets[exercise.id];
+              return acc;
+            }, {}),
+          );
+          if (saved.expandedExerciseId !== undefined) {
+            setExpandedExerciseId(saved.expandedExerciseId);
+          }
+          if (saved.activeSetId !== undefined) {
+            setActiveSetId(saved.activeSetId);
+          }
+          if (saved.sessionStartTime) setSessionStartTime(saved.sessionStartTime);
+        } else {
+          setSetStates(initialSets);
+          if (exercisesData.length > 0) {
+            const firstExerciseId = exercisesData[0].id;
+            setExpandedExerciseId(firstExerciseId);
+            setActiveSetId(`${firstExerciseId}-0`);
+          }
         }
       } catch (error) {
         console.error("Error loading workout start data:", error);
@@ -232,7 +277,7 @@ const WorkoutStart = () => {
     return () => {
       isMounted = false;
     };
-  }, [id, user]);
+  }, [id, user, loadPersistedState]);
 
   useEffect(() => {
     if (exercises.length === 0) return;
@@ -462,6 +507,7 @@ const WorkoutStart = () => {
         date: new Date(),
       });
 
+      clearPersistedState();
       fecharTreino();
       toast.success("Treino concluído!");
       navigate(`/workout/${id}/completion`, { replace: true });
@@ -518,6 +564,20 @@ const WorkoutStart = () => {
   }, [estimatedDurationMs, sessionStartTime]);
 
   const totalExercises = exercises.length;
+
+  const handleBackClick = () => {
+    if (completedCount > 0) {
+      setShowExitConfirm(true);
+    } else {
+      navigate(`/workout/${id}`);
+    }
+  };
+
+  const handleCancelWorkout = () => {
+    clearPersistedState();
+    setShowCancelConfirm(false);
+    navigate(`/workout/${id}`);
+  };
 
   const handleExerciseClick = (exerciseId) => {
     setExpandedExerciseId(
@@ -620,9 +680,13 @@ const WorkoutStart = () => {
 
       <div className="px-4 pt-3 pb-2">
         <div className="flex items-center justify-between mb-2">
-          <Link to={`/workout/${id}`} className={buttonGhostLinkClass}>
+          <button
+            type="button"
+            onClick={handleBackClick}
+            className={buttonGhostLinkClass}
+          >
             ← Voltar
-          </Link>
+          </button>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold">
@@ -632,6 +696,13 @@ const WorkoutStart = () => {
                 {completedCount}/{totalSets}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowCancelConfirm(true)}
+              className="text-xs font-bold text-danger hover:text-danger/80 transition-colors px-1 min-h-[44px]"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
 
@@ -1127,6 +1198,99 @@ const WorkoutStart = () => {
                 </Button>
                 <Button size="md" className="flex-1" onClick={finishWorkout}>
                   Finalizar
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowExitConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="bg-surface2 border border-border-subtle rounded-2xl p-5 max-w-sm w-full shadow-surface-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-text-primary mb-2">
+                Sair e manter em andamento?
+              </h3>
+              <p className="text-sm text-text-secondary mb-4 sm:mb-5">
+                Seu progresso fica salvo e você pode retomar depois pela tela
+                inicial.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="flex-1"
+                  onClick={() => setShowExitConfirm(false)}
+                >
+                  Continuar aqui
+                </Button>
+                <Button
+                  size="md"
+                  className="flex-1"
+                  onClick={() => navigate(`/workout/${id}`)}
+                >
+                  Sair
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCancelConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowCancelConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="bg-surface2 border border-border-subtle rounded-2xl p-5 max-w-sm w-full shadow-surface-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-text-primary mb-2">
+                Cancelar treino?
+              </h3>
+              <p className="text-sm text-text-secondary mb-4 sm:mb-5">
+                Isso descarta o progresso desta sessão. Nenhum treino
+                finalizado é afetado.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="flex-1"
+                  onClick={() => setShowCancelConfirm(false)}
+                >
+                  Continuar treino
+                </Button>
+                <Button
+                  variant="danger"
+                  size="md"
+                  className="flex-1"
+                  onClick={handleCancelWorkout}
+                >
+                  Cancelar treino
                 </Button>
               </div>
             </motion.div>

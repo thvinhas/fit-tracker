@@ -22,6 +22,7 @@ import {
   isWithinCurrentWeek,
 } from "../utils/dateHelpers";
 import { pluralize } from "../utils/pluralize";
+import { peekActiveWorkout } from "../hooks/useWorkoutPersistence";
 
 const WEEKLY_GOAL = 5;
 
@@ -132,6 +133,12 @@ const Dashboard = () => {
     return map;
   }, [workouts]);
 
+  const activeWorkout = useMemo(() => {
+    const saved = peekActiveWorkout();
+    if (!saved?.workoutId || !workoutMap[saved.workoutId]) return null;
+    return { workoutId: saved.workoutId, name: workoutMap[saved.workoutId] };
+  }, [workoutMap]);
+
   const recentSessions = useMemo(() => {
     return [...sessions]
       .sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a))
@@ -170,6 +177,31 @@ const Dashboard = () => {
           {greeting()}, {firstName}
         </h1>
       </div>
+
+      {activeWorkout && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Link
+            to={`/workout/${activeWorkout.workoutId}/start`}
+            className="flex items-center justify-between gap-3 rounded-2xl bg-primary/15 border border-primary/30 px-4 py-3.5 hover:bg-primary/20 transition-colors"
+          >
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-primary">
+                Treino em andamento
+              </p>
+              <p className="text-sm font-bold text-text-primary mt-0.5">
+                {activeWorkout.name}
+              </p>
+            </div>
+            <span className="text-sm font-extrabold text-primary shrink-0">
+              Retomar treino →
+            </span>
+          </Link>
+        </motion.div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}

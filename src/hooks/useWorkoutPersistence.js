@@ -1,6 +1,23 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 const STORAGE_KEY = 'activeWorkoutState';
+const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+// Plain (non-hook) read of the saved draft — for places like the Home
+// screen that just need to know "is there a workout in progress?" without
+// subscribing to save/restore behavior.
+export function peekActiveWorkout() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    if (Date.now() - parsed.timestamp >= MAX_AGE_MS) return null;
+    return parsed;
+  } catch (error) {
+    console.error('Error reading active workout state:', error);
+    return null;
+  }
+}
 
 export function useWorkoutPersistence(workoutState, onRestore) {
   const saveTimeoutRef = useRef(null);
@@ -33,7 +50,7 @@ export function useWorkoutPersistence(workoutState, onRestore) {
       if (saved) {
         const parsed = JSON.parse(saved);
         // Check if state is recent (within 24 hours)
-        const isRecent = Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000;
+        const isRecent = Date.now() - parsed.timestamp < MAX_AGE_MS;
         if (isRecent) {
           return parsed;
         }
