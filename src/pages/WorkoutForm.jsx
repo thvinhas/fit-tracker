@@ -25,7 +25,7 @@ const WorkoutForm = () => {
   const isEdit = !!id;
   const [name, setName] = useState("");
   const [exercises, setExercises] = useState([
-    { name: "", device: "", sets: "", reps: "", currentWeight: "" },
+    { name: "", device: "", equipment: "", sets: "", reps: "", currentWeight: "" },
   ]);
   const [loading, setLoading] = useState(isEdit);
   const originalExerciseIdsRef = useRef([]);
@@ -45,6 +45,7 @@ const WorkoutForm = () => {
                   {
                     name: "",
                     device: "",
+                    equipment: "",
                     sets: "",
                     reps: "",
                     currentWeight: "",
@@ -64,7 +65,7 @@ const WorkoutForm = () => {
   const handleAddExercise = () => {
     setExercises([
       ...exercises,
-      { name: "", device: "", sets: "", reps: "", currentWeight: "" },
+      { name: "", device: "", equipment: "", sets: "", reps: "", currentWeight: "" },
     ]);
   };
 
@@ -116,6 +117,7 @@ const WorkoutForm = () => {
             workoutId: workoutRef.id,
             name: exercise.name,
             device: exercise.device,
+            equipment: exercise.equipment,
             sets: exercise.sets,
             reps: exercise.reps,
             currentWeight: exercise.currentWeight,
@@ -279,8 +281,8 @@ const WorkoutForm = () => {
                       handleExerciseChange(index, "name", picked.name);
                       handleExerciseChange(
                         index,
-                        "device",
-                        picked.equipment ?? exercise.device,
+                        "equipment",
+                        picked.equipment ?? exercise.equipment,
                       );
                       handleExerciseChange(index, "gifUrl", picked.gifUrl);
                       handleExerciseChange(
@@ -294,13 +296,22 @@ const WorkoutForm = () => {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Input
-                    label="Aparelho (opcional)"
+                    label="Nº da máquina/estação (opcional)"
                     type="text"
                     value={exercise.device}
                     onChange={(e) =>
                       handleExerciseChange(index, "device", e.target.value)
                     }
-                    placeholder="Ex: 1"
+                    placeholder="Ex: Máq. 26"
+                  />
+                  <Input
+                    label="Equipamento (opcional)"
+                    type="text"
+                    value={exercise.equipment}
+                    onChange={(e) =>
+                      handleExerciseChange(index, "equipment", e.target.value)
+                    }
+                    placeholder="Ex: Dumbbell"
                   />
                   <Input
                     label="Séries"

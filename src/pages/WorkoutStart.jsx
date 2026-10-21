@@ -22,6 +22,7 @@ import {
 } from "../services/workoutNotification";
 import { pluralize } from "../utils/pluralize";
 import WeightDisplay from "../components/WeightDisplay";
+import { getEquipmentAbbreviation } from "../utils/equipment";
 
 const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
 const DEFAULT_INCREMENT_KG = 2.5;
@@ -184,7 +185,7 @@ const WorkoutStart = () => {
               lastSessionLogs.every((l) => Number(l.reps) >= targetReps);
 
             if (completedAllSets && metTargetReps) {
-              const incrementKg = getProgressionIncrementKg(exercise.device);
+              const incrementKg = getProgressionIncrementKg(exercise.equipment);
               suggestions[exercise.id] = roundToRealisticWeight(
                 defaultWeight + incrementKg,
                 incrementKg,
@@ -692,11 +693,29 @@ const WorkoutStart = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3">
-                          {/* Equipment and Number - Left Corner (#2 highlighted) */}
-                          <div className="flex items-center gap-1.5">
+                          {/* Equipment and machine/station number - Left Corner (#2 highlighted) */}
+                          <div className="flex items-center gap-1 shrink-0">
                             {exercise.device && (
-                              <span className="text-[12px] font-bold text-primary bg-primary/20 px-2.5 py-0.5 rounded-full border border-primary/30">
+                              <span className="inline-flex items-center gap-1 text-[12px] font-bold text-primary bg-primary/20 px-2.5 py-0.5 rounded-full border border-primary/30">
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                  />
+                                </svg>
                                 {exercise.device}
+                              </span>
+                            )}
+                            {exercise.equipment && (
+                              <span className="text-[12px] font-bold text-text-tertiary bg-surface3 px-2.5 py-0.5 rounded-full border border-border-subtle">
+                                {getEquipmentAbbreviation(exercise.equipment)}
                               </span>
                             )}
                           </div>
