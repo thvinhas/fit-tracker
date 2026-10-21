@@ -174,3 +174,67 @@ export const getSessionExerciseLogs = async (sessionId) => {
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
+
+// Programs — groups workouts into "active" vs "archived" so creating a
+// new training cycle doesn't force deleting the old one.
+export const getPrograms = async (userId) => {
+  const q = query(collection(db, "programs"), where("userId", "==", userId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+};
+
+export const getProgram = async (id) => {
+  const snapshot = await getDoc(doc(db, "programs", id));
+  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+};
+
+export const createProgram = async ({ userId, name, status }) => {
+  return await addDoc(collection(db, "programs"), {
+    userId,
+    name,
+    status,
+    createdAt: new Date(),
+  });
+};
+
+export const archiveProgram = async (id) => {
+  return await updateDoc(doc(db, "programs", id), { status: "archived" });
+};
+
+// Orchestrates "start a new training cycle": materializes the implicit
+// program (workouts with no programId yet) as archived on first use,
+// archives whatever is currently active, and creates the new active one.
+// Single place that enforces "only one active program at a time".
+export const startNewProgram = async (userId, newName) => {
+  const [programs, workouts] = await Promise.all([
+    getPrograms(userId),
+    getWorkouts(userId),
+  ]);
+
+  const currentActive = programs.find((p) => p.status === "active");
+
+  if (currentActive) {
+    await archiveProgram(currentActive.id);
+  } else {
+    const unassigned = workouts.filter((w) => !w.programId);
+    if (unassigned.length > 0) {
+      const implicitRef = await createProgram({
+        userId,
+        name: "Programa anterior",
+        status: "archived",
+      });
+      await Promise.all(
+        unassigned.map((w) =>
+          updateWorkout(w.id, { programId: implicitRef.id }),
+        ),
+      );
+    }
+  }
+
+  const newProgramRef = await createProgram({
+    userId,
+    name: newName,
+    status: "active",
+  });
+  return { id: newProgramRef.id, name: newName, status: "active" };
+};
