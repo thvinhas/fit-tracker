@@ -1039,7 +1039,12 @@ const WorkoutStart = () => {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background via-background to-transparent">
-        <Button size="lg" onClick={handleFinishWorkout} disabled={isFinishing}>
+        <Button
+          size="lg"
+          variant={completedCount === totalSets ? "primary" : "secondary"}
+          onClick={handleFinishWorkout}
+          disabled={isFinishing}
+        >
           {isFinishing ? (
             <span className="flex items-center gap-2">
               <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
