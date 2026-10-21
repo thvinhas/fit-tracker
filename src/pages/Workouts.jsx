@@ -399,10 +399,45 @@ const Workouts = () => {
                   {isExpanded && (
                     <div className="flex flex-col gap-2 mt-2 pl-2">
                       {programWorkouts.map((workout) => (
-                        <Card key={workout.id} className="p-4">
-                          <h4 className="text-sm font-bold text-text-primary mb-2">
-                            {workout.name}
-                          </h4>
+                        <Card key={workout.id} className="p-4 relative">
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <h4 className="text-sm font-bold text-text-primary">
+                              {workout.name}
+                            </h4>
+                            <div className="relative shrink-0">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenMenuId(
+                                    openMenuId === workout.id
+                                      ? null
+                                      : workout.id,
+                                  )
+                                }
+                                aria-label="Mais opções"
+                                className="h-11 w-11 flex items-center justify-center rounded-full text-text-muted hover:bg-white/5 hover:text-text-secondary transition-colors"
+                              >
+                                ⋯
+                              </button>
+                              {openMenuId === workout.id && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setOpenMenuId(null)}
+                                  />
+                                  <div className="absolute right-0 top-full z-20 w-36 rounded-xl border border-border-subtle bg-surface2 shadow-surface-lg overflow-hidden">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(workout.id)}
+                                      className="w-full px-4 py-3 text-left text-sm font-semibold text-danger hover:bg-dangerDim transition-colors"
+                                    >
+                                      Excluir
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
                           <Link
                             to={`/workout/${workout.id}`}
                             className={buttonSecondaryLinkClass}

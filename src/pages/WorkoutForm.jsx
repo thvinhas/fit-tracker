@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -33,12 +33,23 @@ const WorkoutForm = () => {
   const originalExerciseIdsRef = useRef([]);
   const [activeProgramId, setActiveProgramId] = useState(null);
 
-  useEffect(() => {
+  const refreshActiveProgramId = useCallback(() => {
     if (!user) return;
     getPrograms(user.uid).then((programs) => {
       setActiveProgramId(getActiveProgram(programs)?.id || null);
     });
   }, [user]);
+
+  useEffect(() => {
+    refreshActiveProgramId();
+  }, [refreshActiveProgramId]);
+
+  useEffect(() => {
+    if (!user) return;
+    const onFocus = () => refreshActiveProgramId();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [user, refreshActiveProgramId]);
 
   useEffect(() => {
     if (isEdit && user) {
