@@ -82,7 +82,9 @@ const WorkoutView = () => {
   const groupedHistoryByExercise = useMemo(() => {
     const grouped = {};
     exercises.forEach((exercise) => {
-      const logs = exerciseLogs[exercise.id] || [];
+      const logs = (exerciseLogs[exercise.id] || []).filter(
+        (log) => log.type !== "warmup",
+      );
       const sessionGroups = {};
 
       logs.forEach((log) => {

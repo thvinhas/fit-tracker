@@ -122,8 +122,11 @@ export const addExerciseLog = async (log) => {
 // Single source of truth for "last performance" of an exercise: the best
 // set (highest weight, ties broken by reps) within its most recent session.
 // Used by both the active session and the plan page so they never diverge.
+// Aquecimento não conta como desempenho/recorde.
 export const getLastPerformance = async (exerciseId) => {
-  const logs = await getExerciseLogs(exerciseId);
+  const logs = (await getExerciseLogs(exerciseId)).filter(
+    (log) => log.type !== "warmup",
+  );
   if (logs.length === 0) return null;
 
   const latestGroupKey = logs[0].sessionId || logs[0].id;
