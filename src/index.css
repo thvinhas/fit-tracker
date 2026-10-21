@@ -9,6 +9,7 @@
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
     overscroll-behavior: none;
+    scrollbar-gutter: stable;
   }
 
   body {
