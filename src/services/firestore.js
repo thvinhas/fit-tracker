@@ -113,6 +113,29 @@ export const addExerciseLog = async (log) => {
   return await addDoc(collection(db, "exerciseLogs"), log);
 };
 
+// Single source of truth for "last performance" of an exercise: the best
+// set (highest weight, ties broken by reps) within its most recent session.
+// Used by both the active session and the plan page so they never diverge.
+export const getLastPerformance = async (exerciseId) => {
+  const logs = await getExerciseLogs(exerciseId);
+  if (logs.length === 0) return null;
+
+  const latestGroupKey = logs[0].sessionId || logs[0].id;
+  const latestSessionLogs = logs.filter(
+    (log) => (log.sessionId || log.id) === latestGroupKey,
+  );
+
+  return latestSessionLogs.reduce((best, log) => {
+    const weight = Number(log.weight) || 0;
+    const bestWeight = Number(best.weight) || 0;
+    if (weight > bestWeight) return log;
+    if (weight === bestWeight && (Number(log.reps) || 0) > (Number(best.reps) || 0)) {
+      return log;
+    }
+    return best;
+  }, latestSessionLogs[0]);
+};
+
 // Sessions - New collection to track workout sessions
 export const getSessions = async (userId) => {
   const q = query(

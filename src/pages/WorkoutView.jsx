@@ -1,7 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getExercises, getExerciseLogs } from "../services/firestore";
+import {
+  getExercises,
+  getExerciseLogs,
+  getLastPerformance,
+} from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import Accordion from "../components/Accordion";
@@ -29,6 +33,9 @@ const WorkoutView = () => {
   const { id } = useParams();
   const [exercises, setExercises] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState({});
+  const [lastPerformanceByExercise, setLastPerformanceByExercise] = useState(
+    {},
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,13 +46,23 @@ const WorkoutView = () => {
           const logs = await getExerciseLogs(exercise.id);
           return { exerciseId: exercise.id, logs };
         });
-        const logsData = await Promise.all(logsPromises);
+        const [logsData, lastPerformanceData] = await Promise.all([
+          Promise.all(logsPromises),
+          Promise.all(
+            exercisesData.map((exercise) => getLastPerformance(exercise.id)),
+          ),
+        ]);
         const logsMap = {};
         logsData.forEach(({ exerciseId, logs }) => {
           logsMap[exerciseId] = logs;
         });
+        const lastPerformanceMap = {};
+        exercisesData.forEach((exercise, index) => {
+          lastPerformanceMap[exercise.id] = lastPerformanceData[index];
+        });
         setExercises(exercisesData);
         setExerciseLogs(logsMap);
+        setLastPerformanceByExercise(lastPerformanceMap);
 
         setLoading(false);
       } catch (error) {
@@ -92,51 +109,7 @@ const WorkoutView = () => {
         })
         .sort((a, b) => getLogTimestampMs(b) - getLogTimestampMs(a));
 
-      // Filter to show only meaningful progressions
-      const filteredSessions = [];
-      const sortedByOldest = [...sessionsArray].sort(
-        (a, b) => getLogTimestampMs(a) - getLogTimestampMs(b),
-      );
-
-      let maxWeightSeen = 0;
-      let maxRepsAtMaxWeight = 0;
-
-      sortedByOldest.forEach((session) => {
-        const weight = session.bestWeight || 0;
-        const reps = session.bestReps || 0;
-
-        if (filteredSessions.length === 0) {
-          filteredSessions.push(session);
-          maxWeightSeen = weight;
-          maxRepsAtMaxWeight = reps;
-          return;
-        }
-
-        if (weight > maxWeightSeen) {
-          filteredSessions.push(session);
-          maxWeightSeen = weight;
-          maxRepsAtMaxWeight = reps;
-          return;
-        }
-
-        if (weight === maxWeightSeen && reps > maxRepsAtMaxWeight) {
-          filteredSessions.push(session);
-          maxRepsAtMaxWeight = reps;
-          return;
-        }
-
-        const previousBestReps = Math.max(
-          ...filteredSessions.map((s) => s.bestReps || 0),
-        );
-        if (reps > previousBestReps && weight >= maxWeightSeen * 0.9) {
-          filteredSessions.push(session);
-          return;
-        }
-      });
-
-      grouped[exercise.id] = filteredSessions.sort(
-        (a, b) => getLogTimestampMs(b) - getLogTimestampMs(a),
-      );
+      grouped[exercise.id] = sessionsArray;
     });
     return grouped;
   }, [exercises, exerciseLogs]);
@@ -184,7 +157,7 @@ const WorkoutView = () => {
         ) : (
           exercises.map((exercise, index) => {
             const history = groupedHistoryByExercise[exercise.id] || [];
-            const lastSession = history[0];
+            const lastPerformance = lastPerformanceByExercise[exercise.id];
             const hasPR = history.length > 0 && isPRSession(history, 0);
             const sparkValues = history
               .slice(0, 5)
@@ -193,9 +166,9 @@ const WorkoutView = () => {
 
             const goalWeight = Number(exercise.currentWeight) || 0;
             const estimated1RM =
-              lastSession?.bestWeight != null
-                ? Number(lastSession.bestWeight) *
-                  (1 + (Number(lastSession.bestReps) || 0) / 30)
+              lastPerformance?.weight != null
+                ? Number(lastPerformance.weight) *
+                  (1 + (Number(lastPerformance.reps) || 0) / 30)
                 : null;
             const goalProgress =
               goalWeight > 0 && estimated1RM != null
@@ -240,14 +213,14 @@ const WorkoutView = () => {
                       <Sparkline values={sparkValues} active={hasPR} />
                     </div>
                   )}
-                  {lastSession && (
+                  {lastPerformance && (
                     <p className="text-xs text-text-tertiary mb-3">
                       Último:{" "}
                       <span className="font-bold text-text-primary tabular-nums">
-                        {lastSession.bestWeight != null
-                          ? `${lastSession.bestWeight}kg (${kgToLb(lastSession.bestWeight)}lb)`
+                        {lastPerformance.weight != null
+                          ? `${lastPerformance.weight}kg (${kgToLb(lastPerformance.weight)}lb)`
                           : "—"}{" "}
-                        × {lastSession.bestReps || "—"}
+                        × {lastPerformance.reps || "—"}
                       </span>
                     </p>
                   )}

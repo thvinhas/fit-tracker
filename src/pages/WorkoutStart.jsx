@@ -7,6 +7,7 @@ import {
   addWorkoutLog,
   addExerciseLog,
   getExerciseLogs,
+  getLastPerformance,
   addSession,
   getSessions,
 } from "../services/firestore";
@@ -182,9 +183,10 @@ const WorkoutStart = () => {
 
         setExercises(exercisesData);
 
-        const logsByExercise = await Promise.all(
-          exercisesData.map((exercise) => getExerciseLogs(exercise.id)),
-        );
+        const [logsByExercise, lastPerformanceByExercise] = await Promise.all([
+          Promise.all(exercisesData.map((exercise) => getExerciseLogs(exercise.id))),
+          Promise.all(exercisesData.map((exercise) => getLastPerformance(exercise.id))),
+        ]);
 
         const lastMap = {};
         const initialSets = {};
@@ -192,7 +194,7 @@ const WorkoutStart = () => {
 
         exercisesData.forEach((exercise, index) => {
           const logs = logsByExercise[index] || [];
-          const last = logs[0];
+          const last = lastPerformanceByExercise[index];
           lastMap[exercise.id] = last || null;
 
           const n = Math.max(1, Number(exercise.sets) || 1);
