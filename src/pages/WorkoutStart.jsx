@@ -23,7 +23,20 @@ import {
 import { kgToLb } from "../utils/weight";
 
 const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
-const PROGRESSION_INCREMENT_KG = 2.5;
+const DEFAULT_INCREMENT_KG = 2.5;
+const INCREMENT_BY_DEVICE = [
+  { match: /halter|dumbbell|\bdb\b/i, incrementKg: 2 },
+  { match: /m[aá]quina|machine|\bmaq\b/i, incrementKg: 5 },
+  { match: /barra|barbell|\bbb\b/i, incrementKg: 2.5 },
+];
+
+const getProgressionIncrementKg = (device) => {
+  const found = INCREMENT_BY_DEVICE.find(({ match }) => match.test(device || ""));
+  return found ? found.incrementKg : DEFAULT_INCREMENT_KG;
+};
+
+const roundToRealisticWeight = (weightKg, incrementKg) =>
+  Math.round(weightKg / incrementKg) * incrementKg;
 
 const REP_OPTIONS = [6, 8, 10, 12, 15];
 
@@ -229,8 +242,11 @@ const WorkoutStart = () => {
               lastSessionLogs.every((l) => Number(l.reps) >= targetReps);
 
             if (completedAllSets && metTargetReps) {
-              suggestions[exercise.id] =
-                defaultWeight + PROGRESSION_INCREMENT_KG;
+              const incrementKg = getProgressionIncrementKg(exercise.device);
+              suggestions[exercise.id] = roundToRealisticWeight(
+                defaultWeight + incrementKg,
+                incrementKg,
+              );
             }
           }
         });
@@ -869,7 +885,13 @@ const WorkoutStart = () => {
                     <div className="px-3 pb-2 -mt-1 flex items-center gap-2">
                       <span className="text-[11px] font-semibold text-secondary bg-secondaryDim px-2.5 py-1 rounded-full">
                         Sugestão: {progressionSuggestions[exercise.id]}kg (+
-                        {PROGRESSION_INCREMENT_KG}kg)
+                        {(
+                          progressionSuggestions[exercise.id] -
+                          (Number(exercise.currentWeight) || 0)
+                        )
+                          .toFixed(1)
+                          .replace(/\.0$/, "")}
+                        kg)
                       </span>
                       <button
                         type="button"
