@@ -27,7 +27,12 @@ import {
 } from "../utils/dateHelpers";
 import { estimateDurationMs } from "../utils/estimateDuration";
 import { pluralize } from "../utils/pluralize";
-import { getActiveProgram, getActiveProgramWorkouts } from "../utils/programs";
+import {
+  getActiveProgram,
+  getActiveProgramWorkouts,
+  getArchivedPrograms,
+  getProgramWorkouts,
+} from "../utils/programs";
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
@@ -39,6 +44,7 @@ const Workouts = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showNewProgramModal, setShowNewProgramModal] = useState(false);
   const [newProgramName, setNewProgramName] = useState("");
+  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -89,6 +95,7 @@ const Workouts = () => {
   const activeProgram = getActiveProgram(programs);
   const currentProgramWorkouts = getActiveProgramWorkouts(workouts, programs);
   const activeProgramName = activeProgram?.name || "Treinos";
+  const archivedPrograms = getArchivedPrograms(programs);
 
   const startReorder = () => {
     setDraftWorkouts([...currentProgramWorkouts]);
@@ -360,6 +367,56 @@ const Workouts = () => {
               </Card>
             </motion.div>
           ))}
+        </div>
+      )}
+
+      {archivedPrograms.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">
+            Histórico
+          </h3>
+          <div className="flex flex-col gap-2">
+            {archivedPrograms.map((program) => {
+              const programWorkouts = getProgramWorkouts(workouts, program.id);
+              const isExpanded = expandedHistoryId === program.id;
+              return (
+                <div key={program.id}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedHistoryId(isExpanded ? null : program.id)
+                    }
+                    className="w-full flex items-center justify-between rounded-xl bg-surface2 border border-border-subtle px-4 py-3 text-left"
+                  >
+                    <span className="text-sm font-bold text-text-primary">
+                      {program.name}
+                    </span>
+                    <span className="text-xs text-text-muted">
+                      {programWorkouts.length}{" "}
+                      {pluralize(programWorkouts.length, "plano", "planos")}
+                    </span>
+                  </button>
+                  {isExpanded && (
+                    <div className="flex flex-col gap-2 mt-2 pl-2">
+                      {programWorkouts.map((workout) => (
+                        <Card key={workout.id} className="p-4">
+                          <h4 className="text-sm font-bold text-text-primary mb-2">
+                            {workout.name}
+                          </h4>
+                          <Link
+                            to={`/workout/${workout.id}`}
+                            className={buttonSecondaryLinkClass}
+                          >
+                            Abrir
+                          </Link>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
