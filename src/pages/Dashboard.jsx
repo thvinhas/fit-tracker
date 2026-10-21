@@ -11,13 +11,13 @@ import {
   buttonGhostLinkClass,
 } from "../components/Button";
 import {
-  getLocalDayKey,
   getLogTimestampMs,
   computeStreak,
   sessionsThisWeek,
   formatRelativeDate,
   weeklyVolume,
   formatDuration,
+  isWithinCurrentWeek,
 } from "../utils/dateHelpers";
 
 const WEEKLY_GOAL = 5;
@@ -86,8 +86,6 @@ const Dashboard = () => {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [user, loadData]);
-
-  const [todayKey] = useState(() => getLocalDayKey(Date.now()));
 
   const workoutOfTheDay = useMemo(() => {
     if (workouts.length === 0) return null;
@@ -337,7 +335,7 @@ const Dashboard = () => {
               const done = sessions.some(
                 (session) =>
                   session.workoutId === workout.id &&
-                  getLocalDayKey(getLogTimestampMs(session)) === todayKey,
+                  isWithinCurrentWeek(getLogTimestampMs(session)),
               );
               return (
                 <motion.div

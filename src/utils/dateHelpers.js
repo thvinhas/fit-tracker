@@ -40,17 +40,19 @@ export const computeStreak = (logs) => {
   return streak;
 };
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+export const isWithinCurrentWeek = (timestampMs) =>
+  Date.now() - timestampMs < WEEK_MS;
+
 export const sessionsThisWeek = (logs) => {
-  const now = Date.now();
-  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
-  return logs.filter((log) => getLogTimestampMs(log) >= weekAgo).length;
+  return logs.filter((log) => isWithinCurrentWeek(getLogTimestampMs(log)))
+    .length;
 };
 
 export const weeklyVolume = (logs) => {
-  const now = Date.now();
-  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
   return logs
-    .filter((log) => getLogTimestampMs(log) >= weekAgo)
+    .filter((log) => isWithinCurrentWeek(getLogTimestampMs(log)))
     .reduce((sum, log) => sum + (log.totalVolume || 0), 0);
 };
 
