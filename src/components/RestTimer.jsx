@@ -1,6 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const playRestEndFeedback = () => {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
+    navigator.vibrate([200, 100, 200]);
+  }
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContextClass();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.4);
+  } catch {
+    // Web Audio indisponível/bloqueado — vibração já cobre o feedback.
+  }
+};
+
 const RestTimer = ({
   isActive,
   onComplete,
@@ -35,6 +57,7 @@ const RestTimer = ({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(intervalRef.current);
+          playRestEndFeedback();
           onComplete?.();
           return 0;
         }
