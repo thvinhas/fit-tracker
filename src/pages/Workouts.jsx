@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import {
   deleteWorkout,
@@ -8,6 +8,8 @@ import {
   getExercises,
   getSessions,
   updateWorkout,
+  getPrograms,
+  startNewProgram,
 } from "../services/firestore";
 import toast from "react-hot-toast";
 import Container from "../components/Container";
@@ -16,6 +18,7 @@ import Button, {
   buttonPrimaryLinkClass,
   buttonSecondaryLinkClass,
 } from "../components/Button";
+import Input from "../components/Input";
 import { ListSkeleton } from "../components/Skeleton";
 import {
   formatDuration,
@@ -24,56 +27,71 @@ import {
 } from "../utils/dateHelpers";
 import { estimateDurationMs } from "../utils/estimateDuration";
 import { pluralize } from "../utils/pluralize";
+import { getActiveProgram, getActiveProgramWorkouts } from "../utils/programs";
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
   const [workouts, setWorkouts] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [draftWorkouts, setDraftWorkouts] = useState([]);
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [showNewProgramModal, setShowNewProgramModal] = useState(false);
+  const [newProgramName, setNewProgramName] = useState("");
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!user) return;
-    const fetchWorkouts = async () => {
-      const workoutsData = await getWorkouts(user.uid);
-      const [exercisesByWorkout, sessions] = await Promise.all([
-        Promise.all(workoutsData.map((w) => getExercises(w.id))),
-        getSessions(user.uid),
-      ]);
+    const [workoutsData, programsData] = await Promise.all([
+      getWorkouts(user.uid),
+      getPrograms(user.uid),
+    ]);
+    const [exercisesByWorkout, sessions] = await Promise.all([
+      Promise.all(workoutsData.map((w) => getExercises(w.id))),
+      getSessions(user.uid),
+    ]);
 
-      const lastSessionMsByWorkout = {};
-      sessions.forEach((session) => {
-        const ts = getLogTimestampMs(session);
-        const current = lastSessionMsByWorkout[session.workoutId];
-        if (!current || ts > current) {
-          lastSessionMsByWorkout[session.workoutId] = ts;
-        }
-      });
+    const lastSessionMsByWorkout = {};
+    sessions.forEach((session) => {
+      const ts = getLogTimestampMs(session);
+      const current = lastSessionMsByWorkout[session.workoutId];
+      if (!current || ts > current) {
+        lastSessionMsByWorkout[session.workoutId] = ts;
+      }
+    });
 
-      const enriched = workoutsData.map((workout, index) => {
-        const exercises = exercisesByWorkout[index];
-        const totalSets = exercises.reduce(
-          (sum, ex) => sum + (Number(ex.sets) || 1),
-          0,
-        );
-        return {
-          ...workout,
-          exerciseCount: exercises.length,
-          estimatedDurationMs:
-            exercises.length > 0 ? estimateDurationMs(totalSets) : null,
-          lastSessionMs: lastSessionMsByWorkout[workout.id] || null,
-        };
-      });
+    const enriched = workoutsData.map((workout, index) => {
+      const exercises = exercisesByWorkout[index];
+      const totalSets = exercises.reduce(
+        (sum, ex) => sum + (Number(ex.sets) || 1),
+        0,
+      );
+      return {
+        ...workout,
+        exerciseCount: exercises.length,
+        estimatedDurationMs:
+          exercises.length > 0 ? estimateDurationMs(totalSets) : null,
+        lastSessionMs: lastSessionMsByWorkout[workout.id] || null,
+      };
+    });
 
-      setWorkouts(enriched);
-      setLoading(false);
-    };
-    fetchWorkouts();
+    setWorkouts(enriched);
+    setPrograms(programsData);
+    setLoading(false);
   }, [user]);
 
+  useEffect(() => {
+    (async () => {
+      await loadData();
+    })();
+  }, [loadData]);
+
+  const activeProgram = getActiveProgram(programs);
+  const currentProgramWorkouts = getActiveProgramWorkouts(workouts, programs);
+  const activeProgramName = activeProgram?.name || "Treinos";
+
   const startReorder = () => {
-    setDraftWorkouts([...workouts]);
+    setDraftWorkouts([...currentProgramWorkouts]);
     setIsReorderMode(true);
   };
 
@@ -122,6 +140,20 @@ const Workouts = () => {
       toast.success("Treino excluído.");
     } catch (error) {
       toast.error("Erro ao excluir: " + error.message);
+    }
+  };
+
+  const handleCreateProgram = async () => {
+    if (!newProgramName.trim()) return;
+    try {
+      await startNewProgram(user.uid, newProgramName.trim());
+      setShowNewProgramModal(false);
+      setNewProgramName("");
+      setLoading(true);
+      await loadData();
+      toast.success("Novo programa criado!");
+    } catch (error) {
+      toast.error("Erro ao criar programa: " + error.message);
     }
   };
 
@@ -179,6 +211,19 @@ const Workouts = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, type: "spring", stiffness: 400, damping: 25 }}
       >
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-semibold text-text-secondary">
+            Programa:{" "}
+            <span className="text-text-primary">{activeProgramName}</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowNewProgramModal(true)}
+            className="text-xs font-bold text-primary hover:underline"
+          >
+            Novo programa
+          </button>
+        </div>
         <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">
           Biblioteca
         </h3>
@@ -186,7 +231,7 @@ const Workouts = () => {
 
       {loading ? (
         <ListSkeleton rows={4} />
-      ) : workouts.length === 0 ? (
+      ) : currentProgramWorkouts.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -206,7 +251,7 @@ const Workouts = () => {
         </motion.div>
       ) : (
         <div className="flex flex-col gap-2">
-          {(isReorderMode ? draftWorkouts : workouts).map((workout, index) => (
+          {(isReorderMode ? draftWorkouts : currentProgramWorkouts).map((workout, index) => (
             <motion.div
               key={workout.id}
               initial={{ opacity: 0, y: 10 }}
@@ -276,7 +321,7 @@ const Workouts = () => {
                           index ===
                           (isReorderMode
                             ? draftWorkouts.length
-                            : workouts.length) -
+                            : currentProgramWorkouts.length) -
                             1
                         }
                       >
@@ -317,6 +362,56 @@ const Workouts = () => {
           ))}
         </div>
       )}
+
+      <AnimatePresence>
+        {showNewProgramModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowNewProgramModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface2 border border-border-subtle rounded-2xl p-5 max-w-sm w-full shadow-surface-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-text-primary mb-2">
+                Novo programa
+              </h3>
+              <p className="text-sm text-text-secondary mb-4">
+                "{activeProgramName}" vira histórico. Como se chama o novo
+                programa?
+              </p>
+              <Input
+                value={newProgramName}
+                onChange={(e) => setNewProgramName(e.target.value)}
+                placeholder="Ex: Bloco Hipertrofia"
+              />
+              <div className="flex gap-3 mt-4">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="flex-1"
+                  onClick={() => setShowNewProgramModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="md"
+                  className="flex-1"
+                  onClick={handleCreateProgram}
+                >
+                  Criar
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Container>
   );
 };
