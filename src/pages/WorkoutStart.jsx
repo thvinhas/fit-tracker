@@ -102,6 +102,7 @@ const WorkoutStart = () => {
   const [isFinishing, setIsFinishing] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [pastAvgDurationMs, setPastAvgDurationMs] = useState(null);
+  const sessionHadPRRef = useRef(false);
   const overrunNotifiedRef = useRef(false);
 
   useEffect(() => {
@@ -276,6 +277,7 @@ const WorkoutStart = () => {
                 currentReps > lastReps && currentWeight >= lastWeight;
 
               if (isWeightPR || isRepsPR) {
+                sessionHadPRRef.current = true;
                 const exercise = exercises.find((e) => e.id === exerciseId);
                 setPrAlert({
                   exerciseName: exercise?.name || "Exercício",
@@ -404,6 +406,7 @@ const WorkoutStart = () => {
         totalVolume,
         exerciseCount: completedExercisesCount,
         setCount: completedSetsCount,
+        hasPR: sessionHadPRRef.current,
       });
       const sessionId = sessionRef.id;
 

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
+  getWorkout,
   getExercises,
   getExerciseLogs,
   getLastPerformance,
@@ -21,7 +22,7 @@ const isPRSession = (sortedSessions, index) => {
   const session = sortedSessions[index];
   if (!session) return false;
   const prev = sortedSessions[index + 1];
-  if (!prev) return true;
+  if (!prev) return false;
   return (
     (session.bestWeight || 0) > (prev.bestWeight || 0) ||
     ((session.bestWeight || 0) === (prev.bestWeight || 0) &&
@@ -31,6 +32,7 @@ const isPRSession = (sortedSessions, index) => {
 
 const WorkoutView = () => {
   const { id } = useParams();
+  const [workout, setWorkout] = useState(null);
   const [exercises, setExercises] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState({});
   const [lastPerformanceByExercise, setLastPerformanceByExercise] = useState(
@@ -41,7 +43,11 @@ const WorkoutView = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const exercisesData = await getExercises(id);
+        const [workoutData, exercisesData] = await Promise.all([
+          getWorkout(id),
+          getExercises(id),
+        ]);
+        setWorkout(workoutData);
         const logsPromises = exercisesData.map(async (exercise) => {
           const logs = await getExerciseLogs(exercise.id);
           return { exerciseId: exercise.id, logs };
@@ -125,7 +131,10 @@ const WorkoutView = () => {
   }
 
   return (
-    <Container title="Plano" subtitle="Revisão rápida antes da sessão.">
+    <Container
+      title={workout?.name || "Plano"}
+      subtitle="Revisão rápida antes da sessão."
+    >
       <Link
         to="/workouts"
         className={`${buttonGhostLinkClass} mb-6 touch-feedback min-h-[44px] flex items-center`}

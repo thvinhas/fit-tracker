@@ -2,6 +2,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   deleteDoc,
@@ -20,6 +21,11 @@ export const getWorkouts = async (userId) => {
   );
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+};
+
+export const getWorkout = async (id) => {
+  const snapshot = await getDoc(doc(db, "workouts", id));
+  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
 };
 
 export const addWorkout = async (workout) => {

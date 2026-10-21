@@ -135,43 +135,45 @@ const WorkoutCompletion = () => {
         )}
 
         {/* PR Celebration */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            delay: 0.4,
-            type: "spring",
-            stiffness: 400,
-            damping: 25,
-          }}
-          className="mb-6"
-        >
-          <Card className="p-5 border-secondary/30 bg-secondaryDim">
-            <div className="flex items-center gap-3">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{
-                  delay: 0.5,
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 25,
-                }}
-                className="text-4xl"
-              >
-                🔥
-              </motion.div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-1">
-                  Novo PR!
-                </p>
-                <p className="text-base font-bold text-text-primary">
-                  Continue progredindo
-                </p>
+        {sessionData.hasPR && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: 0.4,
+              type: "spring",
+              stiffness: 400,
+              damping: 25,
+            }}
+            className="mb-6"
+          >
+            <Card className="p-5 border-secondary/30 bg-secondaryDim">
+              <div className="flex items-center gap-3">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{
+                    delay: 0.5,
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 25,
+                  }}
+                  className="text-4xl"
+                >
+                  🔥
+                </motion.div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-1">
+                    Novo PR!
+                  </p>
+                  <p className="text-base font-bold text-text-primary">
+                    Continue progredindo
+                  </p>
+                </div>
               </div>
-            </div>
-          </Card>
-        </motion.div>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Motivational Message */}
         <motion.div
