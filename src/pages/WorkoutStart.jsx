@@ -39,8 +39,6 @@ const getProgressionIncrementKg = (device) => {
 const roundToRealisticWeight = (weightKg, incrementKg) =>
   Math.round(weightKg / incrementKg) * incrementKg;
 
-const REP_OPTIONS = [6, 8, 10, 12, 15];
-
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
 const getFallbackWarmup = (exercise) => {
@@ -99,43 +97,6 @@ const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
   </div>
 );
 
-// Mini rep selector popover
-const RepSelector = ({ value, onChange, onClose, position }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 10 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="absolute z-50 bg-surface2 border border-border-subtle rounded-xl shadow-surface-xl p-2 flex gap-1"
-      style={{
-        top: position?.top || "auto",
-        left: position?.left || "auto",
-        right: position?.right || "auto",
-        bottom: position?.bottom || "auto",
-      }}
-    >
-      {REP_OPTIONS.map((n) => (
-        <button
-          key={n}
-          type="button"
-          onClick={() => {
-            onChange(n);
-            onClose();
-          }}
-          className={`w-10 h-10 rounded-lg text-sm font-bold tabular-nums transition-all ${
-            value === n
-              ? "bg-primary text-black shadow-glow-sm"
-              : "bg-surface3 text-text-tertiary hover:bg-surface4 hover:text-text-secondary"
-          }`}
-        >
-          {n}
-        </button>
-      ))}
-    </motion.div>
-  );
-};
-
 const WorkoutStart = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -150,9 +111,6 @@ const WorkoutStart = () => {
   const [prAlert, setPrAlert] = useState(null);
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
   const [activeSetId, setActiveSetId] = useState(null);
-  const [repSelectorOpen, setRepSelectorOpen] = useState(null);
-  const [repSelectorPosition, setRepSelectorPosition] = useState(null);
-  const repSelectorRef = useRef(null);
   const [restTimerActive, setRestTimerActive] = useState(false);
   const [restTimerDuration, setRestTimerDuration] = useState(90);
   const [warmupSuggestion, setWarmupSuggestion] = useState(null);
@@ -580,39 +538,6 @@ const WorkoutStart = () => {
       );
     }
   };
-
-  const handleSetClick = (exerciseId, setIndex) => {
-    setActiveSetId(`${exerciseId}-${setIndex}`);
-  };
-
-  const handleRepSelectorOpen = (e, exerciseId, setIndex) => {
-    const rect = e.target.getBoundingClientRect();
-    setRepSelectorPosition({
-      top: rect.bottom + 8,
-      left: rect.left,
-    });
-    setRepSelectorOpen(`${exerciseId}-${setIndex}`);
-  };
-
-  const handleRepSelectorClose = () => {
-    setRepSelectorOpen(null);
-    setRepSelectorPosition(null);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        repSelectorRef.current &&
-        !repSelectorRef.current.contains(e.target)
-      ) {
-        handleRepSelectorClose();
-      }
-    };
-    if (repSelectorOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [repSelectorOpen]);
 
   const handleRestTimerComplete = () => {
     setRestTimerActive(false);
@@ -1077,15 +1002,28 @@ const WorkoutStart = () => {
 
                                     {/* Reps Display and Label */}
                                     <div className="flex flex-col items-center gap-0">
-                                      <span
-                                        className={`text-base font-bold tabular-nums ${
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={row.reps}
+                                        disabled={row.completed}
+                                        onFocus={(e) => e.target.select()}
+                                        onChange={(e) => {
+                                          const digits = e.target.value.replace(
+                                            /[^0-9]/g,
+                                            "",
+                                          );
+                                          updateSet(exercise.id, setIndex, {
+                                            reps: digits === "" ? "" : Number(digits),
+                                          });
+                                        }}
+                                        aria-label="Repetições"
+                                        className={`h-11 w-11 rounded-lg bg-transparent text-center text-base font-bold tabular-nums outline-none focus:bg-surface2 ${
                                           row.completed
                                             ? "text-primary"
                                             : "text-text-primary"
                                         }`}
-                                      >
-                                        x{row.reps}
-                                      </span>
+                                      />
                                       <span
                                         className={`text-[10px] font-medium leading-tight ${
                                           row.completed
