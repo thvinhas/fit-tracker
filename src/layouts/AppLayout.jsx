@@ -12,7 +12,7 @@ const AppLayout = () => {
     <div className="min-h-screen min-h-[100dvh] bg-background text-text-primary flex flex-col">
       {!sessionMode && <Header />}
       <main
-        className={`flex-1 w-full max-w-lg mx-auto px-4 ${sessionMode ? "pb-8 pt-4" : "pb-24 pt-4"}`}
+        className={`flex-1 w-full max-w-lg lg:max-w-3xl mx-auto px-4 ${sessionMode ? "pb-8 pt-4" : "pb-24 lg:pb-8 pt-4"}`}
       >
         <Outlet />
       </main>
