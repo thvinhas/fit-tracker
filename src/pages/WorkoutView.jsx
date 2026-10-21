@@ -11,6 +11,7 @@ import {
   buttonGhostLinkClass,
 } from "../components/Button";
 import { getLogTimestampMs } from "../utils/dateHelpers";
+import { kgToLb } from "../utils/weight";
 
 const isPRSession = (sortedSessions, index) => {
   const session = sortedSessions[index];
@@ -223,6 +224,9 @@ const WorkoutView = () => {
                       <p className="text-xs text-text-tertiary mt-1">
                         {exercise.sets} séries × {exercise.reps} reps · meta{" "}
                         {exercise.currentWeight || "—"} kg
+                        {exercise.currentWeight
+                          ? ` (${kgToLb(exercise.currentWeight)} lb)`
+                          : ""}
                       </p>
                     </div>
                     {hasPR && (
@@ -241,7 +245,7 @@ const WorkoutView = () => {
                       Último:{" "}
                       <span className="font-bold text-text-primary tabular-nums">
                         {lastSession.bestWeight != null
-                          ? `${lastSession.bestWeight}kg`
+                          ? `${lastSession.bestWeight}kg (${kgToLb(lastSession.bestWeight)}lb)`
                           : "—"}{" "}
                         × {lastSession.bestReps || "—"}
                       </span>
@@ -250,7 +254,12 @@ const WorkoutView = () => {
                   {goalProgress != null && (
                     <div className="mb-3">
                       <div className="flex items-center justify-between text-[11px] font-bold text-text-muted mb-1.5">
-                        <span>Meta de carga (1RM est.)</span>
+                        <span>
+                          Meta de carga · 1RM est.{" "}
+                          <span className="text-text-primary">
+                            {Math.round(estimated1RM)}kg
+                          </span>
+                        </span>
                         <span className="text-text-primary tabular-nums">
                           {goalProgress}%
                         </span>
@@ -286,7 +295,7 @@ const WorkoutView = () => {
                             </span>
                             <span className="font-bold text-text-secondary tabular-nums">
                               {session.bestWeight != null
-                                ? `${session.bestWeight} kg`
+                                ? `${session.bestWeight} kg (${kgToLb(session.bestWeight)} lb)`
                                 : "—"}{" "}
                               × {session.bestReps || "—"}
                               {isPR && (
