@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { getSessions, getSessionExerciseLogs } from "../services/firestore";
+import {
+  getSessions,
+  getSessionExerciseLogs,
+  getWorkouts,
+} from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import WeekBarChart from "../components/WeekBarChart";
@@ -8,16 +13,19 @@ import { ListSkeleton } from "../components/Skeleton";
 import { motion } from "framer-motion";
 import {
   computeStreak,
+  formatDuration,
   getLogTimestampMs,
   sessionsThisWeek,
 } from "../utils/dateHelpers";
 import { pluralize } from "../utils/pluralize";
+import { formatVolume } from "../utils/volume";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 const Progress = () => {
   const { user, loading: authLoading } = useAuth();
   const [sessions, setSessions] = useState([]);
+  const [workoutMap, setWorkoutMap] = useState({});
   const [muscleVolume, setMuscleVolume] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -27,9 +35,15 @@ const Progress = () => {
 
     const loadSessions = async () => {
       try {
-        const data = await getSessions(user.uid);
+        const [data, workouts] = await Promise.all([
+          getSessions(user.uid),
+          getWorkouts(user.uid),
+        ]);
         if (!isMounted) return;
         setSessions(data);
+        setWorkoutMap(
+          Object.fromEntries(workouts.map((w) => [w.id, w.name])),
+        );
 
         const weekAgo = Date.now() - WEEK_MS;
         const recentSessions = data.filter(
@@ -236,24 +250,38 @@ const Progress = () => {
                   damping: 25,
                 }}
               >
-                <Card className="px-4 py-3 flex justify-between gap-3">
-                  <span className="text-sm text-text-tertiary">
-                    {getLogTimestampMs(log)
-                      ? new Date(getLogTimestampMs(log)).toLocaleString(
-                          "pt-BR",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          },
-                        )
-                      : "—"}
-                  </span>
-                  <span className="text-sm font-bold text-text-secondary truncate">
-                    Sessão registrada
-                  </span>
-                </Card>
+                <Link
+                  to={`/workout/${log.workoutId}/completion?session=${log.id}`}
+                >
+                  <Card className="px-4 py-3 flex items-center justify-between gap-3 active:scale-[0.98] transition-transform hover:bg-surface2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-text-secondary truncate">
+                        {workoutMap[log.workoutId] || "Treino"}
+                      </p>
+                      <p className="text-xs text-text-tertiary mt-0.5">
+                        {getLogTimestampMs(log)
+                          ? new Date(getLogTimestampMs(log)).toLocaleString(
+                              "pt-BR",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right text-xs text-text-tertiary">
+                      <p className="font-bold text-text-primary tabular-nums">
+                        {formatDuration(log.duration)}
+                      </p>
+                      <p className="tabular-nums">
+                        {formatVolume(log.totalVolume || 0)}kg
+                      </p>
+                    </div>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>

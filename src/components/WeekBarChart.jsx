@@ -1,6 +1,6 @@
 import { getLocalDayKey, getLogTimestampMs } from "../utils/dateHelpers";
 
-const DAY_LETTERS = ["D", "S", "T", "Q", "Q", "S", "S"];
+const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const WeekBarChart = ({ sessions }) => {
   const sessionDayKeys = new Set(
@@ -13,7 +13,7 @@ const WeekBarChart = ({ sessions }) => {
     const key = getLocalDayKey(date.getTime());
     return {
       key,
-      label: DAY_LETTERS[date.getDay()],
+      label: DAY_LABELS[date.getDay()],
       active: sessionDayKeys.has(key),
     };
   });

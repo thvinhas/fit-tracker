@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
-import { getSessions } from "../services/firestore";
+import { getSessions, getSession } from "../services/firestore";
 import Button from "../components/Button";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import { formatDuration } from "../utils/dateHelpers";
+import { formatVolume } from "../utils/volume";
 
 const WorkoutCompletion = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("session");
   const { user } = useAuth();
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,11 +25,12 @@ const WorkoutCompletion = () => {
       }
 
       try {
-        const sessions = await getSessions(user.uid);
-        const recentSession = sessions[0];
+        const session = sessionId
+          ? await getSession(sessionId)
+          : (await getSessions(user.uid))[0];
 
-        if (recentSession) {
-          setSessionData(recentSession);
+        if (session) {
+          setSessionData(session);
         }
       } catch (error) {
         console.error("Error loading session data:", error);
@@ -37,14 +40,7 @@ const WorkoutCompletion = () => {
     };
 
     loadSessionData();
-  }, [user]);
-
-  const formatVolume = (volume) => {
-    if (volume >= 1000) {
-      return `${(volume / 1000).toFixed(1)}k`;
-    }
-    return volume.toString();
-  };
+  }, [user, sessionId]);
 
   if (loading) {
     return (

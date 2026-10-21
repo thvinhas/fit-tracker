@@ -157,6 +157,11 @@ export const addSession = async (session) => {
   return await addDoc(collection(db, "sessions"), session);
 };
 
+export const getSession = async (sessionId) => {
+  const snapshot = await getDoc(doc(db, "sessions", sessionId));
+  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+};
+
 export const getSessionExerciseLogs = async (sessionId) => {
   const q = query(
     collection(db, "exerciseLogs"),
