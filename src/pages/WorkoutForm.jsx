@@ -16,7 +16,7 @@ import Button, { buttonGhostLinkClass } from "../components/Button";
 import Input from "../components/Input";
 import ExercisePicker from "../components/ExercisePicker";
 import Card from "../components/Card";
-import { kgToLb } from "../utils/weight";
+import { formatLb } from "../utils/weight";
 
 const WorkoutForm = () => {
   const { id } = useParams();
@@ -338,7 +338,7 @@ const WorkoutForm = () => {
                     />
                     {exercise.currentWeight ? (
                       <p className="mt-1.5 text-[11px] text-text-muted">
-                        ≈ {kgToLb(exercise.currentWeight)} lb
+                        {formatLb(exercise.currentWeight)} lb
                       </p>
                     ) : null}
                   </div>

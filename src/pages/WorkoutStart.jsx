@@ -20,8 +20,8 @@ import {
   fecharTreino,
   avisarTempoExcedido,
 } from "../services/workoutNotification";
-import { kgToLb } from "../utils/weight";
 import { pluralize } from "../utils/pluralize";
+import WeightDisplay from "../components/WeightDisplay";
 
 const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
 const DEFAULT_INCREMENT_KG = 2.5;
@@ -50,7 +50,7 @@ const getFallbackWarmup = (exercise) => {
 };
 
 // Compact weight stepper - much smaller with premium motion
-const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
+const CompactWeightStepper = ({ value, onChange, disabled }) => (
   <div className="flex items-center gap-1">
     <motion.button
       type="button"
@@ -58,38 +58,21 @@ const CompactWeightStepper = ({ value, onChange, disabled, label = "kg" }) => (
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value - 1, 0, 500))}
-      className="h-8 w-8 rounded-[10px] bg-surface2 border border-border-subtle text-xs font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-11 w-11 rounded-[10px] bg-surface2 border border-border-subtle text-xs font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Diminuir peso"
     >
       −
     </motion.button>
-    <div className="min-w-[3rem] text-center px-1">
-      <div>
-        <motion.span
-          key={value}
-          initial={{ scale: 1.2, opacity: 0.5 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-[20px] font-bold tabular-nums text-text-primary leading-none"
-        >
-          {value}
-        </motion.span>
-        <span className="text-[12px] font-semibold text-text-muted ml-0.5 opacity-70">
-          {label}
-        </span>
-      </div>
-      {label === "kg" && (
-        <span className="text-[10px] font-semibold text-text-muted opacity-60 tabular-nums">
-          ~{kgToLb(value)} lb
-        </span>
-      )}
-    </div>
+    <motion.div key={value} initial={{ scale: 1.2, opacity: 0.5 }} animate={{ scale: 1, opacity: 1 }}>
+      <WeightDisplay kg={value} size="lg" className="min-w-[3.5rem] items-center px-1" />
+    </motion.div>
     <motion.button
       type="button"
       disabled={disabled}
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05 }}
       onClick={() => onChange(clamp(value + 1, 0, 500))}
-      className="h-8 w-8 rounded-[10px] bg-surface2 border border-border-subtle text-xs font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
+      className="h-11 w-11 rounded-[10px] bg-surface2 border border-border-subtle text-xs font-bold text-text-primary hover:bg-surface3 hover:border-border-hover disabled:opacity-30 transition-all shadow-sm"
       aria-label="Aumentar peso"
     >
       +
@@ -464,19 +447,6 @@ const WorkoutStart = () => {
     }
   };
 
-  const lastLabel = useCallback(
-    (exerciseId) => {
-      const last = lastByExercise[exerciseId];
-      if (!last) return null;
-      const w = last.weight != null ? `${last.weight} kg` : null;
-      const r = last.reps != null ? `${last.reps} reps` : null;
-      if (w && r) return `${w} × ${r}`;
-      if (w) return w;
-      return null;
-    },
-    [lastByExercise],
-  );
-
   const completedCount = useMemo(() => {
     return exercises.reduce((acc, ex) => {
       const rows = setStates[ex.id] || [];
@@ -694,10 +664,7 @@ const WorkoutStart = () => {
             const isComplete =
               rows.length > 0 && completedSets === totalExerciseSets;
             const last = lastByExercise[exercise.id];
-            const lastLabel =
-              last && last.weight != null && last.reps != null
-                ? `Último: ${last.weight}kg × ${last.reps}`
-                : null;
+            const hasLast = last && last.weight != null && last.reps != null;
 
             return (
               <motion.div
@@ -756,9 +723,11 @@ const WorkoutStart = () => {
                             {completedSets}/{totalExerciseSets}{" "}
                             {pluralize(totalExerciseSets, "série", "séries")}
                           </p>
-                          {lastLabel && (
+                          {hasLast && (
                             <span className="text-[11px] text-text-muted">
-                              • {lastLabel}
+                              • Último:{" "}
+                              <WeightDisplay kg={last.weight} inline /> ×{" "}
+                              {last.reps}
                             </span>
                           )}
                         </div>
@@ -811,7 +780,12 @@ const WorkoutStart = () => {
                   {!isComplete && progressionSuggestions[exercise.id] != null && (
                     <div className="px-3 pb-2 -mt-1 flex items-center gap-2">
                       <span className="text-[11px] font-semibold text-secondary bg-secondaryDim px-2.5 py-1 rounded-full">
-                        Sugestão: {progressionSuggestions[exercise.id]}kg (+
+                        Sugestão:{" "}
+                        <WeightDisplay
+                          kg={progressionSuggestions[exercise.id]}
+                          inline
+                        />{" "}
+                        (+
                         {(
                           progressionSuggestions[exercise.id] -
                           (Number(exercise.currentWeight) || 0)
@@ -872,11 +846,6 @@ const WorkoutStart = () => {
                               </svg>
                               Ver gif do exercício
                             </button>
-                          )}
-                          {lastLabel && (
-                            <p className="px-2 pb-1 text-[11px] font-semibold text-text-tertiary tabular-nums">
-                              {lastLabel}
-                            </p>
                           )}
                           {rows.map((row, setIndex) => {
                             const setActive =

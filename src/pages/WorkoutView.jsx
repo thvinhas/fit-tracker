@@ -15,7 +15,7 @@ import {
   buttonGhostLinkClass,
 } from "../components/Button";
 import { getLogTimestampMs } from "../utils/dateHelpers";
-import { kgToLb } from "../utils/weight";
+import WeightDisplay from "../components/WeightDisplay";
 
 const isPRSession = (sortedSessions, index) => {
   const session = sortedSessions[index];
@@ -194,12 +194,13 @@ const WorkoutView = () => {
                       <h3 className="text-base font-bold text-text-primary">
                         {exercise.name}
                       </h3>
-                      <p className="text-xs text-text-tertiary mt-1">
+                      <p className="text-xs text-text-tertiary mt-1 flex items-center gap-1 flex-wrap">
                         {exercise.sets} séries × {exercise.reps} reps · meta{" "}
-                        {exercise.currentWeight || "—"} kg
-                        {exercise.currentWeight
-                          ? ` (${kgToLb(exercise.currentWeight)} lb)`
-                          : ""}
+                        {exercise.currentWeight ? (
+                          <WeightDisplay kg={exercise.currentWeight} inline />
+                        ) : (
+                          "—"
+                        )}
                       </p>
                     </div>
                     {hasPR && (
@@ -214,14 +215,14 @@ const WorkoutView = () => {
                     </div>
                   )}
                   {lastPerformance && (
-                    <p className="text-xs text-text-tertiary mb-3">
+                    <p className="text-xs text-text-tertiary mb-3 flex items-center gap-1">
                       Último:{" "}
-                      <span className="font-bold text-text-primary tabular-nums">
-                        {lastPerformance.weight != null
-                          ? `${lastPerformance.weight}kg (${kgToLb(lastPerformance.weight)}lb)`
-                          : "—"}{" "}
-                        × {lastPerformance.reps || "—"}
-                      </span>
+                      {lastPerformance.weight != null ? (
+                        <WeightDisplay kg={lastPerformance.weight} inline />
+                      ) : (
+                        "—"
+                      )}{" "}
+                      × {lastPerformance.reps || "—"}
                     </p>
                   )}
                   {goalProgress != null && (
@@ -266,10 +267,12 @@ const WorkoutView = () => {
                                   })
                                 : "—"}
                             </span>
-                            <span className="font-bold text-text-secondary tabular-nums">
-                              {session.bestWeight != null
-                                ? `${session.bestWeight} kg (${kgToLb(session.bestWeight)} lb)`
-                                : "—"}{" "}
+                            <span className="font-bold text-text-secondary tabular-nums flex items-center gap-1">
+                              {session.bestWeight != null ? (
+                                <WeightDisplay kg={session.bestWeight} inline />
+                              ) : (
+                                "—"
+                              )}{" "}
                               × {session.bestReps || "—"}
                               {isPR && (
                                 <span className="ml-2 text-secondary">🔥</span>
