@@ -9,8 +9,10 @@ import {
   addExercise,
   updateExercise,
   getExercises,
+  getPrograms,
 } from "../services/firestore";
 import toast from "react-hot-toast";
+import { getActiveProgram } from "../utils/programs";
 import Container from "../components/Container";
 import Button, { buttonGhostLinkClass } from "../components/Button";
 import Input from "../components/Input";
@@ -29,6 +31,14 @@ const WorkoutForm = () => {
   ]);
   const [loading, setLoading] = useState(isEdit);
   const originalExerciseIdsRef = useRef([]);
+  const [activeProgramId, setActiveProgramId] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getPrograms(user.uid).then((programs) => {
+      setActiveProgramId(getActiveProgram(programs)?.id || null);
+    });
+  }, [user]);
 
   useEffect(() => {
     if (isEdit && user) {
@@ -109,6 +119,7 @@ const WorkoutForm = () => {
         userId: user.uid,
         order: Date.now(),
         createdAt: new Date(),
+        ...(activeProgramId ? { programId: activeProgramId } : {}),
       });
 
       await Promise.all(
@@ -148,6 +159,7 @@ const WorkoutForm = () => {
           userId: user.uid,
           order: Date.now(), // Simple order
           createdAt: new Date(),
+          ...(activeProgramId ? { programId: activeProgramId } : {}),
         });
         workoutId = workoutRef.id;
       }
