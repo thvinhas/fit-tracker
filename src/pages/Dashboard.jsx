@@ -21,6 +21,7 @@ import {
   formatDuration,
   isWithinCurrentWeek,
 } from "../utils/dateHelpers";
+import { pluralize } from "../utils/pluralize";
 
 const WEEKLY_GOAL = 5;
 
@@ -185,7 +186,7 @@ const Dashboard = () => {
             <p className="text-lg font-extrabold text-primary tabular-nums">
               {streak}
               <span className="text-xs font-bold text-text-muted ml-1">
-                dias
+                {pluralize(streak, "dia", "dias")}
               </span>
             </p>
           </div>

@@ -7,6 +7,7 @@ import Container from "../components/Container";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import { computeStreak } from "../utils/dateHelpers";
+import { pluralize } from "../utils/pluralize";
 
 const Profile = () => {
   const { user, logout, loading } = useAuth();
@@ -95,7 +96,7 @@ const Profile = () => {
               Sequência atual
             </span>
             <span className="text-sm font-extrabold text-primary tabular-nums">
-              {streak} dias
+              {streak} {pluralize(streak, "dia", "dias")}
             </span>
           </div>
           <div className="px-5 py-4 flex items-center justify-between">
