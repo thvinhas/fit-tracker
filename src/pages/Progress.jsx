@@ -11,6 +11,7 @@ import {
   getLogTimestampMs,
   sessionsThisWeek,
 } from "../utils/dateHelpers";
+import { pluralize } from "../utils/pluralize";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -93,13 +94,13 @@ const Progress = () => {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🔥</span>
               <p className="text-[10px] uppercase tracking-wider text-text-muted font-bold">
-                Streak
+                Sequência
               </p>
             </div>
             <p className="text-2xl font-black text-primary mt-1 tabular-nums">
               {streak}
               <span className="text-xs font-bold text-text-muted ml-1">
-                dias
+                {pluralize(streak, "dia", "dias")}
               </span>
             </p>
           </Card>
@@ -191,7 +192,7 @@ const Progress = () => {
                   <div className="flex items-center justify-between text-[11px] font-semibold text-text-tertiary mb-1">
                     <span>{group}</span>
                     <span className="text-text-primary tabular-nums">
-                      {sets} {sets === 1 ? "série" : "séries"}
+                      {sets} {pluralize(sets, "série", "séries")}
                     </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-white/6 overflow-hidden">

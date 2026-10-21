@@ -1,3 +1,5 @@
+import { pluralize } from "./pluralize";
+
 export const getLocalDayKey = (timestampMs) => {
   const date = new Date(timestampMs);
   const year = date.getFullYear();
@@ -78,7 +80,7 @@ export const formatRelativeDate = (timestampMs) => {
   if (minutes < 1) return "agora mesmo";
   if (minutes < 60) return `há ${minutes} min`;
   if (hours < 24) return `há ${hours}h`;
-  if (days < 7) return `há ${days} ${days === 1 ? "dia" : "dias"}`;
+  if (days < 7) return `há ${days} ${pluralize(days, "dia", "dias")}`;
 
   const date = new Date(timestampMs);
   return date.toLocaleDateString("pt-BR", {

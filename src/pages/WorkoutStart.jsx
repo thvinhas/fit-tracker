@@ -21,6 +21,7 @@ import {
   avisarTempoExcedido,
 } from "../services/workoutNotification";
 import { kgToLb } from "../utils/weight";
+import { pluralize } from "../utils/pluralize";
 
 const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
 const DEFAULT_INCREMENT_KG = 2.5;
@@ -827,7 +828,8 @@ const WorkoutStart = () => {
                               isComplete ? "text-primary" : "text-text-tertiary"
                             }`}
                           >
-                            {completedSets}/{totalExerciseSets} sets
+                            {completedSets}/{totalExerciseSets}{" "}
+                            {pluralize(totalExerciseSets, "série", "séries")}
                           </p>
                           {lastLabel && (
                             <span className="text-[11px] text-text-muted">
