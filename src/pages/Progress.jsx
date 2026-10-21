@@ -56,7 +56,7 @@ const Progress = () => {
 
         const volume = {};
         logsBySession.flat().forEach((log) => {
-          if (!log.muscleGroup) return;
+          if (!log.muscleGroup || log.type === "warmup") return;
           volume[log.muscleGroup] = (volume[log.muscleGroup] || 0) + 1;
         });
         setMuscleVolume(volume);
