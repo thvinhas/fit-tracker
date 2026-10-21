@@ -5,6 +5,8 @@ import { useAuth } from "../hooks/useAuth";
 import {
   deleteWorkout,
   getWorkouts,
+  getExercises,
+  getSessions,
   updateWorkout,
 } from "../services/firestore";
 import toast from "react-hot-toast";
@@ -15,6 +17,13 @@ import Button, {
   buttonSecondaryLinkClass,
 } from "../components/Button";
 import { ListSkeleton } from "../components/Skeleton";
+import {
+  formatDuration,
+  formatRelativeDate,
+  getLogTimestampMs,
+} from "../utils/dateHelpers";
+import { estimateDurationMs } from "../utils/estimateDuration";
+import { pluralize } from "../utils/pluralize";
 
 const Workouts = () => {
   const { user, loading: authLoading } = useAuth();
@@ -22,12 +31,42 @@ const Workouts = () => {
   const [draftWorkouts, setDraftWorkouts] = useState([]);
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
     if (!user) return;
     const fetchWorkouts = async () => {
       const workoutsData = await getWorkouts(user.uid);
-      setWorkouts(workoutsData);
+      const [exercisesByWorkout, sessions] = await Promise.all([
+        Promise.all(workoutsData.map((w) => getExercises(w.id))),
+        getSessions(user.uid),
+      ]);
+
+      const lastSessionMsByWorkout = {};
+      sessions.forEach((session) => {
+        const ts = getLogTimestampMs(session);
+        const current = lastSessionMsByWorkout[session.workoutId];
+        if (!current || ts > current) {
+          lastSessionMsByWorkout[session.workoutId] = ts;
+        }
+      });
+
+      const enriched = workoutsData.map((workout, index) => {
+        const exercises = exercisesByWorkout[index];
+        const totalSets = exercises.reduce(
+          (sum, ex) => sum + (Number(ex.sets) || 1),
+          0,
+        );
+        return {
+          ...workout,
+          exerciseCount: exercises.length,
+          estimatedDurationMs:
+            exercises.length > 0 ? estimateDurationMs(totalSets) : null,
+          lastSessionMs: lastSessionMsByWorkout[workout.id] || null,
+        };
+      });
+
+      setWorkouts(enriched);
       setLoading(false);
     };
     fetchWorkouts();
@@ -71,6 +110,7 @@ const Workouts = () => {
   };
 
   const handleDelete = async (workoutId) => {
+    setOpenMenuId(null);
     if (
       !window.confirm("Excluir este treino? Esta ação não pode ser desfeita.")
     ) {
@@ -178,15 +218,43 @@ const Workouts = () => {
                 damping: 25,
               }}
             >
-              <Card className="p-4">
-                <div className="flex items-start justify-between gap-4 mb-4">
+              <Card className="p-4 relative">
+                <div className="flex items-start justify-between gap-4 mb-1">
                   <h4 className="text-base font-bold text-text-primary">
                     {workout.name}
                   </h4>
                   {!isReorderMode && (
-                    <span className="shrink-0 text-[11px] font-extrabold text-text-muted bg-white/5 px-2.5 py-1 rounded-full">
-                      {index + 1}
-                    </span>
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenMenuId(
+                            openMenuId === workout.id ? null : workout.id,
+                          )
+                        }
+                        aria-label="Mais opções"
+                        className="h-11 w-11 flex items-center justify-center rounded-full text-text-muted hover:bg-white/5 hover:text-text-secondary transition-colors"
+                      >
+                        ⋯
+                      </button>
+                      {openMenuId === workout.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setOpenMenuId(null)}
+                          />
+                          <div className="absolute right-0 top-full z-20 w-36 rounded-xl border border-border-subtle bg-surface2 shadow-surface-lg overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(workout.id)}
+                              className="w-full px-4 py-3 text-left text-sm font-semibold text-danger hover:bg-dangerDim transition-colors"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
                   {isReorderMode && (
                     <div className="flex gap-2">
@@ -218,29 +286,31 @@ const Workouts = () => {
                   )}
                 </div>
                 {!isReorderMode && (
-                  <div className="flex gap-2">
-                    <Link
-                      to={`/workout/${workout.id}`}
-                      className={`${buttonSecondaryLinkClass} flex-1`}
-                    >
-                      Abrir
-                    </Link>
-                    <Link
-                      to={`/workouts/${workout.id}/edit`}
-                      className={`${buttonSecondaryLinkClass} flex-1`}
-                    >
-                      Editar
-                    </Link>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      className="flex-1 !px-2"
-                      onClick={() => handleDelete(workout.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </div>
+                  <>
+                    <p className="text-[11px] text-text-muted mb-4">
+                      {workout.exerciseCount}{" "}
+                      {pluralize(workout.exerciseCount, "exercício", "exercícios")}
+                      {workout.estimatedDurationMs != null &&
+                        ` · ~${formatDuration(workout.estimatedDurationMs)}`}
+                      {workout.lastSessionMs
+                        ? ` · última vez ${formatRelativeDate(workout.lastSessionMs)}`
+                        : " · nunca feito"}
+                    </p>
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/workout/${workout.id}`}
+                        className={`${buttonSecondaryLinkClass} flex-1`}
+                      >
+                        Abrir
+                      </Link>
+                      <Link
+                        to={`/workouts/${workout.id}/edit`}
+                        className={`${buttonSecondaryLinkClass} flex-1`}
+                      >
+                        Editar
+                      </Link>
+                    </div>
+                  </>
                 )}
               </Card>
             </motion.div>

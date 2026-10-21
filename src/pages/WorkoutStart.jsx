@@ -23,8 +23,8 @@ import {
 import { pluralize } from "../utils/pluralize";
 import WeightDisplay from "../components/WeightDisplay";
 import { getEquipmentAbbreviation } from "../utils/equipment";
+import { estimateDurationMs } from "../utils/estimateDuration";
 
-const FALLBACK_SECONDS_PER_SET = 90; // 1min de execução + 30s de descanso
 const DEFAULT_INCREMENT_KG = 2.5;
 const INCREMENT_BY_DEVICE = [
   { match: /halter|dumbbell|\bdb\b/i, incrementKg: 2 },
@@ -476,7 +476,7 @@ const WorkoutStart = () => {
   const estimatedDurationMs = useMemo(() => {
     if (pastAvgDurationMs != null) return pastAvgDurationMs;
     if (totalSets === 0) return null;
-    return totalSets * FALLBACK_SECONDS_PER_SET * 1000;
+    return estimateDurationMs(totalSets);
   }, [pastAvgDurationMs, totalSets]);
 
   useEffect(() => {
