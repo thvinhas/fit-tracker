@@ -42,6 +42,24 @@ const roundToRealisticWeight = (weightKg, incrementKg) =>
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
+const SET_TYPES = ["normal", "warmup", "drop", "failure"];
+const SET_TYPE_LABELS = {
+  normal: "Normal",
+  warmup: "Aquec.",
+  drop: "Drop",
+  failure: "Falha",
+};
+const SET_TYPE_STYLES = {
+  normal: "border-border-subtle text-text-muted hover:border-border-hover",
+  warmup: "border-secondary/40 text-secondary bg-secondaryDim",
+  drop: "border-primary/40 text-primary bg-primary/10",
+  failure: "border-danger/40 text-danger bg-dangerDim",
+};
+const nextSetType = (current) => {
+  const index = SET_TYPES.indexOf(current || "normal");
+  return SET_TYPES[(index + 1) % SET_TYPES.length];
+};
+
 const getFallbackWarmup = (exercise) => {
   const workingWeight = Number(exercise?.currentWeight) || 0;
   if (workingWeight <= 0) return "Barra vazia × 10, 50% × 8, 70% × 5";
@@ -173,6 +191,7 @@ const WorkoutStart = () => {
             weight: defaultWeight,
             reps: last?.reps != null ? Number(last.reps) : defaultReps,
             completed: false,
+            type: "normal",
           }));
 
           if (last?.sessionId) {
@@ -264,8 +283,12 @@ const WorkoutStart = () => {
           if (i === setIndex) {
             const newRow = { ...row, ...patch };
 
-            // Check for PR when completing a set
-            if (patch.completed === true && !row.completed) {
+            // Check for PR when completing a set (aquecimento não conta)
+            if (
+              patch.completed === true &&
+              !row.completed &&
+              newRow.type !== "warmup"
+            ) {
               const last = lastByExercise[exerciseId];
               const currentWeight = Number(newRow.weight) || 0;
               const currentReps = Number(newRow.reps) || 0;
@@ -375,8 +398,10 @@ const WorkoutStart = () => {
           if (!row.completed) continue;
           const w = Number(row.weight) || 0;
           const r = Number(row.reps) || 0;
-          lastWeight = w;
-          totalVolume += w * r;
+          if (row.type !== "warmup") {
+            lastWeight = w;
+            totalVolume += w * r;
+          }
           completedSetsCount++;
           exerciseHasCompletedSets = true;
         }
@@ -428,6 +453,7 @@ const WorkoutStart = () => {
             sessionId,
             date: new Date(),
             muscleGroup: exercise.muscleGroup || null,
+            type: row.type || "normal",
           };
           exerciseLogs.push(addExerciseLog(logData));
         }
@@ -900,6 +926,19 @@ const WorkoutStart = () => {
                                       <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                                         {setIndex + 1}
                                       </span>
+                                      <button
+                                        type="button"
+                                        disabled={row.completed}
+                                        onClick={() =>
+                                          updateSet(exercise.id, setIndex, {
+                                            type: nextSetType(row.type),
+                                          })
+                                        }
+                                        className={`h-6 min-w-[2.75rem] px-1.5 rounded-full border text-[9px] font-bold uppercase tracking-wide transition-colors disabled:opacity-40 ${SET_TYPE_STYLES[row.type || "normal"]}`}
+                                        aria-label="Tipo de série"
+                                      >
+                                        {SET_TYPE_LABELS[row.type || "normal"]}
+                                      </button>
                                       <motion.button
                                         type="button"
                                         whileTap={{ scale: 0.85 }}
