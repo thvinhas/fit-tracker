@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
-import { getSessions, getWorkouts } from "../services/firestore";
+import { getSessions, getWorkouts, getPrograms } from "../services/firestore";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import WeeklyRing from "../components/WeeklyRing";
@@ -23,6 +23,7 @@ import {
 } from "../utils/dateHelpers";
 import { pluralize } from "../utils/pluralize";
 import { peekActiveWorkout } from "../hooks/useWorkoutPersistence";
+import { getActiveProgramWorkouts } from "../utils/programs";
 
 const WEEKLY_GOAL = 5;
 
@@ -39,17 +40,20 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const [workouts, setWorkouts] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     if (!user) return;
     try {
-      const [workoutsData, sessionsData] = await Promise.all([
+      const [workoutsData, sessionsData, programsData] = await Promise.all([
         getWorkouts(user.uid),
         getSessions(user.uid),
+        getPrograms(user.uid),
       ]);
       setWorkouts(workoutsData);
       setSessions(sessionsData);
+      setPrograms(programsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     }
@@ -61,13 +65,15 @@ const Dashboard = () => {
 
     const fetchData = async () => {
       try {
-        const [workoutsData, sessionsData] = await Promise.all([
+        const [workoutsData, sessionsData, programsData] = await Promise.all([
           getWorkouts(user.uid),
           getSessions(user.uid),
+          getPrograms(user.uid),
         ]);
         if (!isMounted) return;
         setWorkouts(workoutsData);
         setSessions(sessionsData);
+        setPrograms(programsData);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -91,19 +97,24 @@ const Dashboard = () => {
     return () => window.removeEventListener("focus", onFocus);
   }, [user, loadData]);
 
+  const currentProgramWorkouts = useMemo(
+    () => getActiveProgramWorkouts(workouts, programs),
+    [workouts, programs],
+  );
+
   const workoutOfTheDay = useMemo(() => {
-    if (workouts.length === 0) return null;
+    if (currentProgramWorkouts.length === 0) return null;
 
     const lastSession = sessions[0];
-    if (!lastSession) return workouts[0];
+    if (!lastSession) return currentProgramWorkouts[0];
 
-    const lastIndex = workouts.findIndex(
+    const lastIndex = currentProgramWorkouts.findIndex(
       (w) => w.id === lastSession.workoutId,
     );
-    if (lastIndex === -1) return workouts[0];
+    if (lastIndex === -1) return currentProgramWorkouts[0];
 
-    return workouts[(lastIndex + 1) % workouts.length];
-  }, [workouts, sessions]);
+    return currentProgramWorkouts[(lastIndex + 1) % currentProgramWorkouts.length];
+  }, [currentProgramWorkouts, sessions]);
 
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
   const weekCount = useMemo(() => sessionsThisWeek(sessions), [sessions]);
@@ -373,7 +384,7 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        {workouts.length === 0 ? (
+        {currentProgramWorkouts.length === 0 ? (
           <Card className="p-8 text-center">
             <p className="text-text-muted text-sm mb-4">
               Ainda sem treinos salvos.
@@ -384,7 +395,7 @@ const Dashboard = () => {
           </Card>
         ) : (
           <div className="flex flex-col gap-2">
-            {workouts.map((workout, index) => {
+            {currentProgramWorkouts.map((workout, index) => {
               const done = sessions.some(
                 (session) =>
                   session.workoutId === workout.id &&
